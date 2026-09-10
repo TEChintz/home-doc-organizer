@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { ContainerScroll } from "../components/ui/container-scroll-animation";
 import {
   Bell,
   CalendarClock,
@@ -6,12 +7,14 @@ import {
   Check,
   ChevronRight,
   Clock3,
+  CreditCard,
   FileCheck2,
   FileText,
   Fingerprint,
   Folder,
   HeartPulse,
   Home,
+  Landmark,
   LockKeyhole,
   Mail,
   ShieldCheck,
@@ -20,6 +23,7 @@ import {
   UploadCloud,
   UsersRound,
 } from "lucide-react";
+import { DocketLogo } from "@/components/ui/docket-logo";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -88,10 +92,8 @@ function GoogleMark() {
 function BrandMark() {
   return (
     <div className="flex min-w-0 items-center gap-2">
-      <span className="grid size-9 shrink-0 place-items-center rounded-full border border-brand/20 bg-background shadow-soft">
-        <Folder className="size-5 text-brand" aria-hidden="true" />
-      </span>
-      <span className="text-base font-extrabold tracking-normal text-foreground">Docket</span>
+      <DocketLogo className="size-8 text-brand drop-shadow-sm" />
+      <span className="text-xl font-extrabold tracking-tight text-foreground">Docket</span>
     </div>
   );
 }
@@ -102,7 +104,7 @@ function SectionLabel({ children, dark = false }: { children: React.ReactNode; d
       className={cn(
         "inline-flex items-center rounded-full border px-3 py-1 text-xs font-bold shadow-inner-soft",
         dark
-          ? "border-security-line bg-security-panel text-security-muted"
+          ? "border-white/10 bg-white/5 text-zinc-300 backdrop-blur-md shadow-[0_4px_24px_-4px_rgba(255,255,255,0.05)]"
           : "border-border bg-background/80 text-muted-foreground",
       )}
     >
@@ -197,28 +199,108 @@ function DashboardMockup() {
 
 function PolicyPaper() {
   return (
-    <div className="relative overflow-hidden rounded-[1.75rem] border border-border bg-background p-5 shadow-glass">
-      <div className="scan-line absolute inset-x-5 top-24 z-10 h-1 rounded-full bg-brand shadow-brand" />
-      <div className="mb-5 flex items-center justify-between gap-3 border-b border-border pb-4">
+    <div className="relative flex flex-col overflow-hidden rounded-[1.75rem] border border-border bg-surface shadow-glass">
+      <div className="flex items-center justify-between gap-3 px-6 pt-6 pb-4">
         <div>
           <p className="text-xs font-black uppercase text-muted-foreground">Auto policy</p>
           <h3 className="text-lg font-black text-foreground">Insurance statement</h3>
         </div>
-        <FileText className="size-9 text-brand" aria-hidden="true" />
-      </div>
-      <div className="space-y-3">
-        <div className="h-3 w-5/6 rounded-full bg-muted" />
-        <div className="h-3 w-full rounded-full bg-muted" />
-        <div className="h-3 w-4/5 rounded-full bg-muted" />
-        <div className="mt-6 grid grid-cols-2 gap-3">
-          <div className="h-16 rounded-2xl border border-border bg-surface" />
-          <div className="h-16 rounded-2xl border border-border bg-surface" />
+        <div className="grid size-10 place-items-center rounded-2xl bg-brand-soft text-brand">
+          <FileText className="size-5" aria-hidden="true" />
         </div>
-        <div className="h-3 w-11/12 rounded-full bg-muted" />
-        <div className="h-3 w-3/4 rounded-full bg-muted" />
-        <div className="mt-5 rounded-2xl border border-dashed border-border bg-surface p-4">
-          <div className="h-3 w-1/2 rounded-full bg-muted" />
-          <div className="mt-3 h-3 w-2/3 rounded-full bg-muted" />
+      </div>
+      
+      <div className="relative flex-1 bg-muted/30 p-4 sm:p-6 shadow-inner-soft">
+        <div className="relative mx-auto aspect-[8.5/11] w-full max-w-[280px] overflow-hidden rounded-md border border-border/50 bg-background shadow-md">
+          <div className="scan-line absolute inset-x-0 top-0 z-20 h-0.5 bg-brand shadow-[0_0_12px_2px_color-mix(in_oklab,var(--brand)_60%,transparent)]" />
+          
+          {/* Scaled High-Res Container */}
+          <div className="absolute left-0 top-0 w-[200%] h-[200%] origin-top-left scale-50 flex flex-col px-10 py-12 text-sm text-foreground/80">
+            {/* Header */}
+            <div className="mb-8 flex items-start justify-between">
+              <div>
+                <p className="text-2xl font-black text-brand tracking-tight">STATE FARM</p>
+                <p className="text-base text-muted-foreground font-medium">Auto Insurance</p>
+              </div>
+              <div className="text-right">
+                <p className="text-xl font-bold text-foreground">DECLARATIONS PAGE</p>
+                <p className="text-base font-medium">Policy: <span className="font-bold text-brand">Auto Protect Plus</span></p>
+              </div>
+            </div>
+            
+            <div className="mb-8 h-0.5 w-full bg-border/60" />
+            
+            {/* Insured Info */}
+            <div className="mb-8 grid grid-cols-2 gap-8">
+              <div>
+                <p className="mb-2 text-xs font-bold tracking-wider text-foreground">NAMED INSURED</p>
+                <div className="text-base leading-relaxed">
+                  <p className="font-bold text-foreground">Maya Patel</p>
+                  <p>123 Main Street</p>
+                  <p>San Francisco, CA 94105</p>
+                </div>
+              </div>
+              <div>
+                <p className="mb-2 text-xs font-bold tracking-wider text-foreground">POLICY PERIOD</p>
+                <div className="text-base leading-relaxed">
+                  <p>Effective: Aug 18, 2025</p>
+                  <p className="mt-1 whitespace-nowrap font-bold text-brand">
+                    Renewal: Aug 18, 2026
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Covered Vehicles */}
+            <div className="mb-8 rounded-xl border-2 border-border/40 bg-surface/30 p-5">
+              <p className="mb-3 text-xs font-bold tracking-wider text-foreground">COVERED VEHICLE</p>
+              <div className="flex justify-between text-base font-medium">
+                <span className="text-foreground">2026 Tesla Model 3</span>
+                <span className="font-mono text-muted-foreground">VIN: <span className="font-bold text-brand">•••• •••• 4381</span></span>
+              </div>
+            </div>
+            
+            {/* Coverages */}
+            <div className="mb-8">
+              <p className="mb-3 border-b-2 border-border/40 pb-2 text-xs font-bold tracking-wider text-foreground">
+                COVERAGES & LIMITS
+              </p>
+              <div className="space-y-3 pt-2 text-base">
+                <div className="flex justify-between">
+                  <span>Bodily Injury Liability</span>
+                  <span className="font-medium text-foreground">$250k / $500k</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Property Damage</span>
+                  <span className="font-medium text-foreground">$100k</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Comprehensive (Ded.)</span>
+                  <span className="font-medium text-foreground">$500</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Collision (Ded.)</span>
+                  <span className="font-medium text-foreground">$500</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Premium */}
+            <div className="mt-auto flex items-end justify-between border-t-2 border-border/60 pt-6">
+              <div>
+                <p className="mb-1 text-xs font-bold tracking-wider text-foreground">TOTAL PREMIUM</p>
+                <p className="text-sm font-medium text-muted-foreground">6 Month Policy</p>
+              </div>
+              <p className="text-4xl font-black text-foreground tracking-tight">$846.00</p>
+            </div>
+            
+            {/* Fine print */}
+            <div className="mt-8 text-center text-xs text-muted-foreground/60 font-medium">
+              <p>This is a summary of coverages. Please refer to your actual policy for complete details.</p>
+              <p className="mt-1">Page 1 of 4 • Document ID: SF-8492-AX</p>
+            </div>
+
+          </div>
         </div>
       </div>
     </div>
@@ -227,23 +309,119 @@ function PolicyPaper() {
 
 function ExtractedCard() {
   return (
-    <div className="rounded-[1.75rem] border border-border bg-background/90 p-5 shadow-dashboard backdrop-blur-xl">
-      <div className="mb-5 flex items-center justify-between gap-3">
+    <div className="relative flex h-full flex-col justify-center py-4 lg:pl-6">
+      <div className="mb-6 flex items-center justify-between gap-3 lg:pl-4">
         <div>
-          <p className="text-xs font-black uppercase text-brand">Extracted</p>
+          <p className="text-xs font-black uppercase tracking-wider text-brand">Data Extracted</p>
           <h3 className="text-lg font-black text-foreground">Clean record</h3>
         </div>
         <div className="grid size-10 place-items-center rounded-2xl bg-brand-soft text-brand">
-          <Sparkles className="size-5" aria-hidden="true" />
+          <FileCheck2 className="size-5" aria-hidden="true" />
         </div>
       </div>
-      <div className="space-y-3">
-        {extractedFields.map(([label, value]) => (
-          <div key={label} className="flex items-center justify-between gap-4 rounded-2xl border border-border bg-surface p-3">
-            <span className="text-xs font-bold text-muted-foreground">{label}</span>
-            <span className="text-right text-sm font-black text-foreground">{value}</span>
+
+      {/* Unified container for the extracted fields */}
+      <div className="relative rounded-[1.5rem] border border-border/60 bg-surface/40 p-2 shadow-inner-soft backdrop-blur-md">
+        
+        <div className="relative flex flex-col gap-1">
+          {/* Wavy Connection Lines */}
+          <div className="pointer-events-none absolute -left-16 top-0 bottom-0 hidden w-16 lg:block">
+            <svg className="h-full w-full overflow-visible text-brand/60" viewBox="0 0 100 100" preserveAspectRatio="none" fill="none">
+              <defs>
+                <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                  <path d="M 0 1 L 9 5 L 0 9 z" fill="currentColor" />
+                </marker>
+              </defs>
+              <path d="M 0 50 C 40 50, 60 12.5, 100 12.5" stroke="currentColor" strokeWidth="1.5" strokeDasharray="2 2" vectorEffect="non-scaling-stroke" markerEnd="url(#arrow)" />
+              <path d="M 0 50 C 40 50, 60 37.5, 100 37.5" stroke="currentColor" strokeWidth="1.5" strokeDasharray="2 2" vectorEffect="non-scaling-stroke" markerEnd="url(#arrow)" />
+              <path d="M 0 50 C 40 50, 60 62.5, 100 62.5" stroke="currentColor" strokeWidth="1.5" strokeDasharray="2 2" vectorEffect="non-scaling-stroke" markerEnd="url(#arrow)" />
+              <path d="M 0 50 C 40 50, 60 87.5, 100 87.5" stroke="currentColor" strokeWidth="1.5" strokeDasharray="2 2" vectorEffect="non-scaling-stroke" markerEnd="url(#arrow)" />
+            </svg>
           </div>
-        ))}
+
+          {extractedFields.map(([label, value]) => (
+            <div
+              key={label}
+              className="relative flex items-center justify-between gap-4 rounded-xl border border-border/80 bg-background/90 p-3 shadow-sm transition-colors duration-300 hover:border-brand/40"
+            >
+              <span className="text-xs font-bold text-muted-foreground pl-2">{label}</span>
+              <span className="text-right text-sm font-black text-foreground pr-1">{value}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DigiLockerVisual() {
+  return (
+    <div className="relative mx-auto aspect-square w-full max-w-[450px] overflow-visible">
+      {/* Connection Wires */}
+      <svg className="absolute inset-0 h-full w-full text-brand/60" viewBox="0 0 100 100" preserveAspectRatio="none" fill="none">
+        {/* Top Left (Aadhaar) */}
+        <path d="M 50 50 C 50 20, 37 20, 24 20" stroke="currentColor" strokeWidth="1.5" strokeDasharray="2 2" vectorEffect="non-scaling-stroke" />
+        {/* Top Right (PAN) */}
+        <path d="M 50 50 C 50 20, 63 20, 76 20" stroke="currentColor" strokeWidth="1.5" strokeDasharray="2 2" vectorEffect="non-scaling-stroke" />
+        {/* Bottom Left (Driving) */}
+        <path d="M 50 50 C 50 80, 37 80, 24 80" stroke="currentColor" strokeWidth="1.5" strokeDasharray="2 2" vectorEffect="non-scaling-stroke" />
+        {/* Bottom Right (RC) */}
+        <path d="M 50 50 C 50 80, 63 80, 76 80" stroke="currentColor" strokeWidth="1.5" strokeDasharray="2 2" vectorEffect="non-scaling-stroke" />
+      </svg>
+
+      {/* Central DigiLocker Node */}
+      <div className="absolute left-[50%] top-[50%] z-20 flex w-36 sm:w-44 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-[2rem] border border-border bg-background p-5 sm:p-6 shadow-dashboard backdrop-blur-xl">
+        <div className="mb-2 grid h-10 w-28 sm:h-12 sm:w-32 place-items-center">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/1/1f/DigiLocker.svg" alt="DigiLocker" className="h-full w-full object-contain" />
+        </div>
+        <div className="absolute -bottom-3 flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1 shadow-sm">
+          <div className="size-2 rounded-full bg-green-500 animate-pulse" />
+          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Connected</span>
+        </div>
+      </div>
+
+      {/* Aadhaar Card (TL) */}
+      <div className="absolute left-[24%] top-[20%] z-10 flex w-36 sm:w-44 -translate-x-1/2 -translate-y-1/2 items-center gap-2 sm:gap-3 rounded-2xl border border-border/80 bg-background/80 p-2 sm:p-3 shadow-glass backdrop-blur-md">
+        <div className="grid size-8 sm:size-10 shrink-0 place-items-center overflow-hidden rounded-xl bg-white p-1 sm:p-1.5 shadow-sm">
+          <img src="https://upload.wikimedia.org/wikipedia/en/c/cf/Aadhaar_Logo.svg" alt="Aadhaar" className="h-full w-full object-contain" />
+        </div>
+        <div className="min-w-0">
+          <p className="truncate text-[10px] sm:text-xs font-black text-foreground">Aadhaar Card</p>
+          <p className="text-[9px] sm:text-[10px] font-bold uppercase text-blue-500">Verified</p>
+        </div>
+      </div>
+
+      {/* PAN Card (TR) */}
+      <div className="absolute left-[76%] top-[20%] z-10 flex w-36 sm:w-40 -translate-x-1/2 -translate-y-1/2 items-center gap-2 sm:gap-3 rounded-2xl border border-border/80 bg-background/80 p-2 sm:p-3 shadow-glass backdrop-blur-md">
+        <div className="grid size-8 sm:size-10 shrink-0 place-items-center overflow-hidden rounded-xl bg-white p-1 sm:p-1.5 shadow-sm">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/1/13/Logo_of_Income_Tax_Department_India.png" alt="Income Tax" className="h-full w-full object-contain" />
+        </div>
+        <div className="min-w-0">
+          <p className="truncate text-[10px] sm:text-xs font-black text-foreground">PAN Card</p>
+          <p className="text-[9px] sm:text-[10px] font-bold uppercase text-orange-500">Verified</p>
+        </div>
+      </div>
+
+      {/* Driving License (BL) */}
+      <div className="absolute left-[24%] top-[80%] z-10 flex w-40 sm:w-48 -translate-x-1/2 -translate-y-1/2 items-center gap-2 sm:gap-3 rounded-2xl border border-border/80 bg-background/80 p-2 sm:p-3 shadow-glass backdrop-blur-md">
+        <div className="grid size-8 sm:size-10 shrink-0 place-items-center overflow-hidden rounded-xl bg-white p-1 sm:p-1.5 shadow-sm">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/5/55/Emblem_of_India.svg" alt="Government of India" className="h-full w-full object-contain" />
+        </div>
+        <div className="min-w-0">
+          <p className="truncate text-[10px] sm:text-xs font-black text-foreground">Driving License</p>
+          <p className="text-[9px] sm:text-[10px] font-bold uppercase text-green-500">Verified</p>
+        </div>
+      </div>
+
+      {/* Vehicle RC (BR) */}
+      <div className="absolute left-[76%] top-[80%] z-10 flex w-36 sm:w-44 -translate-x-1/2 -translate-y-1/2 items-center gap-2 sm:gap-3 rounded-2xl border border-border/80 bg-background/80 p-2 sm:p-3 shadow-glass backdrop-blur-md">
+        <div className="grid size-8 sm:size-10 shrink-0 place-items-center overflow-hidden rounded-xl bg-white p-1 sm:p-1.5 shadow-sm">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/5/55/Emblem_of_India.svg" alt="Government of India" className="h-full w-full object-contain" />
+        </div>
+        <div className="min-w-0">
+          <p className="truncate text-[10px] sm:text-xs font-black text-foreground">Vehicle RC</p>
+          <p className="text-[9px] sm:text-[10px] font-bold uppercase text-purple-500">Verified</p>
+        </div>
       </div>
     </div>
   );
@@ -324,16 +502,17 @@ function HouseholdPanel() {
 function LockVisual() {
   return (
     <div className="relative mx-auto grid size-64 place-items-center sm:size-80">
-      <div className="absolute inset-0 rounded-full bg-security-glow blur-3xl" />
-      <div className="lock-shackle absolute top-10 h-32 w-40 rounded-t-full border-[18px] border-b-0 border-security-metal shadow-metal sm:h-40 sm:w-52" />
-      <div className="relative mt-20 grid h-36 w-48 place-items-center rounded-[2rem] border border-security-line bg-security-metal shadow-metal sm:h-44 sm:w-60">
-        <div className="absolute inset-x-8 top-5 h-px bg-security-highlight" />
-        <div className="grid size-16 place-items-center rounded-full border border-security-line bg-security-panel text-security-foreground shadow-inner-soft">
-          <Fingerprint className="size-8" aria-hidden="true" />
+      <div className="absolute inset-0 rounded-full bg-brand/10 blur-3xl" />
+      <div className="lock-shackle absolute top-6 h-36 w-44 rounded-t-full border-[14px] border-b-0 border-zinc-800 bg-gradient-to-b from-transparent to-zinc-950/50 shadow-2xl sm:h-44 sm:w-56" />
+      <div className="relative mt-20 grid h-40 w-56 place-items-center rounded-[2.5rem] border border-white/10 bg-zinc-900/60 shadow-[0_0_50px_-12px_rgba(0,0,0,1)] backdrop-blur-xl sm:h-48 sm:w-64">
+        <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+        <div className="relative grid size-20 place-items-center rounded-full border border-white/10 bg-zinc-950 shadow-[inset_0_2px_10px_rgba(255,255,255,0.05)]">
+          <Fingerprint className="relative z-10 size-10 text-brand" aria-hidden="true" />
+          <div className="absolute inset-0 rounded-full bg-brand/20 blur-xl" />
         </div>
-        <div className="absolute bottom-5 flex gap-2">
-          <span className="h-2 w-8 rounded-full bg-security-highlight" />
-          <span className="h-2 w-5 rounded-full bg-security-line" />
+        <div className="absolute bottom-6 flex gap-2">
+          <span className="h-1.5 w-10 rounded-full bg-zinc-700" />
+          <span className="h-1.5 w-6 rounded-full bg-zinc-800" />
         </div>
       </div>
     </div>
@@ -343,11 +522,11 @@ function LockVisual() {
 function Index() {
   return (
     <main className="min-h-screen overflow-hidden bg-background font-sans text-foreground">
-      <section className="relative min-h-screen overflow-hidden border-b border-border bg-grid-fade px-4 pb-10 pt-5 sm:px-6 lg:px-8">
+      <section className="relative min-h-screen overflow-hidden border-b border-border bg-grid-fade px-4 pb-20 pt-5 sm:px-6 lg:px-8 sm:pb-32">
         <div className="pointer-events-none absolute inset-6 rounded-[2rem] border border-border/70" />
         <div className="pointer-events-none absolute left-1/2 top-0 h-72 w-72 -translate-x-1/2 rounded-full bg-brand/10 blur-3xl" />
 
-        <nav className="relative z-10 mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)_auto] items-center gap-4 rounded-full border border-border/80 bg-background/75 px-3 py-3 shadow-glass backdrop-blur-xl sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:px-4">
+        <nav className="fixed left-4 right-4 top-4 z-50 mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)_auto] items-center gap-4 rounded-full border border-border/80 bg-background/75 px-3 py-3 shadow-glass backdrop-blur-xl sm:left-6 sm:right-6 sm:top-6 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:px-4">
           <BrandMark />
           <div className="hidden items-center gap-8 text-sm font-bold text-muted-foreground sm:flex">
             <a href="#features" className="transition-colors hover:text-foreground">
@@ -358,30 +537,37 @@ function Index() {
             </a>
           </div>
           <div className="flex justify-end">
-            <Button className="h-10 rounded-full px-5 text-sm font-extrabold shadow-brand">Sign In</Button>
+            <Button asChild className="h-10 rounded-full px-5 text-sm font-extrabold shadow-brand cursor-pointer">
+              <Link to="/dashboard">Sign In</Link>
+            </Button>
           </div>
         </nav>
 
-        <div className="relative z-10 mx-auto flex min-h-[calc(100vh-5.5rem)] max-w-6xl flex-col justify-between pt-16 sm:pt-20">
-          <div className="mx-auto max-w-4xl text-center">
-            <SectionLabel>Secure family vault</SectionLabel>
-            <h1 className="mt-6 text-5xl font-black leading-[0.95] tracking-normal text-foreground sm:text-6xl lg:text-7xl">
-              Your family's life. Organized.
-            </h1>
-            <p className="mx-auto mt-5 max-w-2xl text-base font-medium leading-7 text-muted-foreground sm:text-lg">
-              Insurance, warranties, medical reports, and vehicle papers in one secure vault.
-            </p>
-            <div className="mt-8 flex justify-center">
-              <Button className="h-12 rounded-full px-5 text-sm font-black shadow-brand sm:px-7">
-                <GoogleMark />
-                Sign In with Google
-                <ChevronRight className="size-4" aria-hidden="true" />
-              </Button>
-            </div>
-          </div>
-          <div className="mt-12 translate-y-10 sm:mt-16 sm:translate-y-16">
+        <div className="relative z-10 mx-auto flex flex-col items-center pt-24 sm:pt-32">
+          <ContainerScroll
+            titleComponent={
+              <div className="mx-auto max-w-4xl text-center mb-8">
+                <SectionLabel>Secure family vault</SectionLabel>
+                <h1 className="mt-6 text-5xl font-black leading-[0.95] tracking-normal text-foreground sm:text-6xl lg:text-7xl">
+                  Your family's life. Organized.
+                </h1>
+                <p className="mx-auto mt-5 max-w-2xl text-base font-medium leading-7 text-muted-foreground sm:text-lg">
+                  Insurance, warranties, medical reports, and vehicle papers in one secure vault.
+                </p>
+                <div className="mt-8 flex justify-center">
+                  <Button asChild className="h-12 rounded-full px-5 text-sm font-black shadow-brand sm:px-7 cursor-pointer">
+                    <Link to="/dashboard">
+                      <GoogleMark />
+                      Sign In with Google
+                      <ChevronRight className="size-4" aria-hidden="true" />
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            }
+          >
             <DashboardMockup />
-          </div>
+          </ContainerScroll>
         </div>
       </section>
 
@@ -394,14 +580,36 @@ function Index() {
               Upload any document. The vault instantly extracts the issuer, title, and critical dates while you do nothing.
             </p>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <PolicyPaper />
-            <ExtractedCard />
+          <div className="relative grid gap-4 sm:grid-cols-2 lg:gap-10">
+            <div className="relative z-10">
+              <PolicyPaper />
+            </div>
+            <div className="relative z-10">
+              <ExtractedCard />
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="bg-background px-4 py-24 sm:px-6 lg:px-8">
+      <section className="relative overflow-hidden bg-background px-4 py-24 sm:px-6 lg:px-8 border-y border-border/50">
+        <div className="mx-auto grid max-w-6xl items-center gap-16 lg:grid-cols-2">
+          {/* Visual Side (Left) */}
+          <div className="order-2 lg:order-1">
+            <DigiLockerVisual />
+          </div>
+          
+          {/* Text Side (Right) */}
+          <div className="order-1 max-w-xl lg:order-2">
+            <SectionLabel>Government Integrations</SectionLabel>
+            <h2 className="mt-5 text-4xl font-black leading-tight text-foreground sm:text-5xl">Sync with DigiLocker.</h2>
+            <p className="mt-4 text-base font-medium leading-7 text-muted-foreground sm:text-lg">
+              Automatically pull your Aadhaar, PAN, Driving License, and vehicle registrations directly from the government vault. Always verified, always up to date.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-surface px-4 py-24 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-4xl text-center">
           <SectionLabel>Expiry Tracking</SectionLabel>
           <h2 className="mt-5 text-4xl font-black leading-tight text-foreground sm:text-5xl">Never miss a renewal.</h2>
@@ -429,25 +637,35 @@ function Index() {
         </div>
       </section>
 
-      <section id="security" className="relative overflow-hidden bg-security px-4 py-24 text-security-foreground sm:px-6 lg:px-8">
-        <div className="absolute inset-0 bg-security-grid opacity-70" />
+      <section id="security" className="relative overflow-hidden bg-black px-4 py-24 text-white sm:px-6 lg:px-8">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)]" />
         <div className="relative mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
           <div className="max-w-xl">
             <SectionLabel dark>Privacy & Security</SectionLabel>
             <h2 className="mt-5 text-4xl font-black leading-tight sm:text-6xl">Private by design.</h2>
-            <p className="mt-5 text-base font-medium leading-7 text-security-muted sm:text-lg">
+            <p className="mt-5 text-base font-medium leading-7 text-zinc-400 sm:text-lg">
               Sensitive identifiers are instantly locked and masked. Your family's data never leaves your control.
             </p>
-            <div className="mt-8 grid gap-3 sm:grid-cols-2">
-              <div className="rounded-3xl border border-security-line bg-security-panel p-4">
-                <Tag className="mb-4 size-5 text-brand-bright" aria-hidden="true" />
-                <p className="text-sm font-black">Masked IDs</p>
-                <p className="mt-1 text-xs font-semibold text-security-muted">Aadhaar, VIN, and policy numbers stay hidden.</p>
+            <div className="mt-8 grid gap-4 sm:grid-cols-2">
+              <div className="group relative overflow-hidden rounded-[2rem] border border-zinc-800 bg-zinc-900/40 p-6 transition-all duration-500 hover:border-zinc-700 hover:bg-zinc-900/60">
+                <div className="absolute inset-0 bg-gradient-to-br from-brand/10 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+                <div className="relative z-10">
+                  <div className="mb-5 inline-flex size-12 items-center justify-center rounded-2xl border border-white/5 bg-zinc-950 shadow-inner">
+                    <Tag className="size-5 text-brand" aria-hidden="true" />
+                  </div>
+                  <p className="text-lg font-bold text-white">Masked IDs</p>
+                  <p className="mt-2 text-sm font-medium leading-relaxed text-zinc-400">Aadhaar, VIN, and policy numbers stay hidden behind military-grade encryption.</p>
+                </div>
               </div>
-              <div className="rounded-3xl border border-security-line bg-security-panel p-4">
-                <Mail className="mb-4 size-5 text-brand-bright" aria-hidden="true" />
-                <p className="text-sm font-black">Private alerts</p>
-                <p className="mt-1 text-xs font-semibold text-security-muted">Only the right household members are notified.</p>
+              <div className="group relative overflow-hidden rounded-[2rem] border border-zinc-800 bg-zinc-900/40 p-6 transition-all duration-500 hover:border-zinc-700 hover:bg-zinc-900/60">
+                <div className="absolute inset-0 bg-gradient-to-br from-brand/10 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+                <div className="relative z-10">
+                  <div className="mb-5 inline-flex size-12 items-center justify-center rounded-2xl border border-white/5 bg-zinc-950 shadow-inner">
+                    <Mail className="size-5 text-brand" aria-hidden="true" />
+                  </div>
+                  <p className="text-lg font-bold text-white">Private alerts</p>
+                  <p className="mt-2 text-sm font-medium leading-relaxed text-zinc-400">Only the right household members are notified. Data never leaves your control.</p>
+                </div>
               </div>
             </div>
           </div>
@@ -460,9 +678,11 @@ function Index() {
           <SectionLabel>Ready in seconds</SectionLabel>
           <h2 className="mt-5 text-4xl font-black leading-tight text-foreground sm:text-6xl">Take control of the paperwork.</h2>
           <div className="mt-8 flex justify-center">
-            <Button className="h-12 rounded-full px-5 text-sm font-black shadow-brand sm:px-7">
-              <GoogleMark />
-              Sign In with Google
+            <Button asChild className="h-12 rounded-full px-5 text-sm font-black shadow-brand sm:px-7 cursor-pointer">
+              <Link to="/dashboard">
+                <GoogleMark />
+                Sign In with Google
+              </Link>
             </Button>
           </div>
           <p className="mt-5 text-sm font-semibold text-muted-foreground">No separate account required. Setup takes seconds.</p>

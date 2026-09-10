@@ -1,5 +1,4 @@
-@import "tailwindcss" source(none);
-@source "../src";
+@import "tailwindcss";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
@@ -74,101 +73,89 @@
 :root {
   --font-docket: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
   --radius: 0.875rem;
-  --background: oklch(0.985 0.007 265);
-  --foreground: oklch(0.165 0.024 265);
-  --card: oklch(0.998 0.002 265);
-  --card-foreground: oklch(0.165 0.024 265);
-  --popover: oklch(0.998 0.002 265);
-  --popover-foreground: oklch(0.165 0.024 265);
-  --primary: oklch(0.565 0.22 274);
-  --primary-foreground: oklch(0.99 0.003 265);
-  --secondary: oklch(0.955 0.013 264);
-  --secondary-foreground: oklch(0.22 0.03 265);
-  --muted: oklch(0.94 0.012 265);
-  --muted-foreground: oklch(0.45 0.035 265);
-  --accent: oklch(0.928 0.04 272);
-  --accent-foreground: oklch(0.29 0.11 274);
-  --destructive: oklch(0.61 0.22 27);
-  --destructive-foreground: oklch(0.99 0.003 265);
-  --border: oklch(0.89 0.014 265);
-  --input: oklch(0.89 0.014 265);
-  --ring: oklch(0.565 0.22 274);
-  --surface: oklch(0.963 0.009 265);
-  --brand: oklch(0.565 0.22 274);
-  --brand-foreground: oklch(0.99 0.003 265);
-  --brand-soft: oklch(0.93 0.055 274);
-  --brand-bright: oklch(0.76 0.16 279);
-  --docket-blue: oklch(0.91 0.055 246);
-  --docket-blue-foreground: oklch(0.35 0.12 247);
-  --docket-mint: oklch(0.91 0.08 170);
-  --docket-mint-foreground: oklch(0.33 0.1 170);
-  --docket-gold: oklch(0.9 0.1 88);
-  --docket-gold-foreground: oklch(0.38 0.08 74);
-  --docket-lilac: oklch(0.91 0.06 305);
-  --docket-lilac-foreground: oklch(0.39 0.12 303);
-  --docket-red: oklch(0.57 0.22 27);
-  --docket-red-soft: oklch(0.95 0.035 28);
-  --security: oklch(0.095 0.01 265);
-  --security-foreground: oklch(0.985 0.002 265);
-  --security-muted: oklch(0.72 0.018 265);
-  --security-panel: oklch(0.16 0.018 265 / 72%);
-  --security-line: oklch(0.44 0.035 265 / 45%);
-  --security-metal: oklch(0.54 0.025 265);
-  --security-highlight: oklch(0.9 0.01 265 / 80%);
-  --security-glow: oklch(0.565 0.22 274 / 42%);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.984 0.003 247.858);
-  --sidebar-foreground: oklch(0.129 0.042 264.695);
-  --sidebar-primary: oklch(0.208 0.042 265.755);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.968 0.007 247.896);
-  --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
-  --sidebar-border: oklch(0.929 0.013 255.508);
-  --sidebar-ring: oklch(0.704 0.04 256.788);
-  --shadow-soft: 0 18px 45px -28px color-mix(in oklab, var(--foreground) 28%, transparent);
+  
+  /* Minimalist Monochromatic Theme with Vibrant Blue Accent */
+  --background: oklch(0.98 0 0); /* Off-white main background */
+  --foreground: oklch(0.1 0 0);  /* Near black text */
+  
+  /* Black Cards (User request) */
+  --card: oklch(0.1 0 0);
+  --card-foreground: oklch(0.98 0 0);
+  
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.1 0 0);
+  
+  /* The single Accent Color (Vibrant Electric Blue) */
+  --primary: oklch(0.55 0.25 260);
+  --primary-foreground: oklch(1 0 0);
+  
+  --secondary: oklch(0.95 0 0);
+  --secondary-foreground: oklch(0.1 0 0);
+  
+  --muted: oklch(0.95 0 0);
+  --muted-foreground: oklch(0.4 0 0);
+  
+  --accent: oklch(0.95 0 0);
+  --accent-foreground: oklch(0.1 0 0);
+  
+  --destructive: oklch(0.6 0.2 25);
+  --destructive-foreground: oklch(1 0 0);
+  
+  --border: oklch(0.9 0 0);
+  --input: oklch(0.9 0 0);
+  --ring: oklch(0.55 0.25 260);
+  
+  --surface: oklch(1 0 0);
+  
+  --brand: oklch(0.55 0.25 260);
+  --brand-foreground: oklch(1 0 0);
+  --brand-soft: oklch(0.95 0.05 260);
+  --brand-bright: oklch(0.65 0.25 260);
+  
+  /* Convert previous colorful accents to monochrome or primary */
+  --docket-blue: oklch(0.55 0.25 260);
+  --docket-blue-foreground: oklch(1 0 0);
+  --docket-mint: oklch(0.95 0 0);
+  --docket-mint-foreground: oklch(0.1 0 0);
+  --docket-gold: oklch(0.9 0 0);
+  --docket-gold-foreground: oklch(0.1 0 0);
+  --docket-lilac: oklch(0.85 0 0);
+  --docket-lilac-foreground: oklch(0.1 0 0);
+  --docket-red: oklch(0.6 0.2 25);
+  --docket-red-soft: oklch(0.95 0 0);
+  
+  /* Security / Other */
+  --security: oklch(0.1 0 0);
+  --security-foreground: oklch(1 0 0);
+  --security-muted: oklch(0.5 0 0);
+  --security-panel: oklch(0.1 0 0 / 72%);
+  --security-line: oklch(0.5 0 0 / 45%);
+  --security-metal: oklch(0.5 0 0);
+  --security-highlight: oklch(0.9 0 0 / 80%);
+  --security-glow: oklch(0.55 0.25 260 / 42%);
+  
+  /* Charts - use monochromatic shades of blue and gray */
+  --chart-1: oklch(0.55 0.25 260);
+  --chart-2: oklch(0.7 0.15 260);
+  --chart-3: oklch(0.3 0.1 260);
+  --chart-4: oklch(0.2 0 0);
+  --chart-5: oklch(0.5 0 0);
+  
+  /* Sidebar matching cards */
+  --sidebar: oklch(0.1 0 0);
+  --sidebar-foreground: oklch(0.98 0 0);
+  --sidebar-primary: oklch(0.55 0.25 260);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.2 0 0);
+  --sidebar-accent-foreground: oklch(0.98 0 0);
+  --sidebar-border: oklch(0.2 0 0);
+  --sidebar-ring: oklch(0.55 0.25 260);
+  
+  --shadow-soft: 0 18px 45px -28px color-mix(in oklab, oklch(0.1 0 0) 28%, transparent);
   --shadow-glass: 0 18px 60px -38px color-mix(in oklab, var(--brand) 32%, transparent), inset 0 1px 0 color-mix(in oklab, var(--background) 82%, transparent);
   --shadow-brand: 0 14px 28px -16px color-mix(in oklab, var(--brand) 65%, transparent);
-  --shadow-dashboard: 0 32px 95px -52px color-mix(in oklab, var(--foreground) 45%, transparent);
-  --shadow-metal: 0 28px 70px -30px color-mix(in oklab, var(--brand) 45%, transparent), inset 0 1px 0 color-mix(in oklab, var(--security-foreground) 40%, transparent);
-}
-
-.dark {
-  --background: oklch(0.129 0.042 264.695);
-  --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.208 0.042 265.755);
-  --card-foreground: oklch(0.984 0.003 247.858);
-  --popover: oklch(0.208 0.042 265.755);
-  --popover-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.68 0.18 274);
-  --primary-foreground: oklch(0.984 0.003 247.858);
-  --secondary: oklch(0.279 0.041 260.031);
-  --secondary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.279 0.041 260.031);
-  --muted-foreground: oklch(0.704 0.04 256.788);
-  --accent: oklch(0.279 0.041 260.031);
-  --accent-foreground: oklch(0.984 0.003 247.858);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.68 0.18 274);
-  --surface: oklch(0.18 0.03 265);
-  --brand: oklch(0.68 0.18 274);
-  --brand-foreground: oklch(0.984 0.003 247.858);
-  --brand-soft: oklch(0.32 0.08 274);
-  --brand-bright: oklch(0.76 0.16 279);
-  --sidebar: oklch(0.208 0.042 265.755);
-  --sidebar-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.279 0.041 260.031);
-  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.551 0.027 264.364);
+  --shadow-dashboard: 0 32px 95px -52px color-mix(in oklab, oklch(0.1 0 0) 45%, transparent);
+  --shadow-metal: 0 28px 70px -30px color-mix(in oklab, oklch(0.1 0 0) 45%, transparent), inset 0 1px 0 color-mix(in oklab, oklch(1 0 0) 40%, transparent);
 }
 
 @utility bg-grid-fade {
@@ -240,14 +227,14 @@
 
 @keyframes scan-document {
   0%, 100% {
-    transform: translateY(-3.5rem);
-    opacity: 0.25;
+    transform: translateY(-1rem);
+    opacity: 0;
   }
-  45%, 55% {
+  10%, 90% {
     opacity: 1;
   }
-  100% {
-    transform: translateY(13rem);
+  50% {
+    transform: translateY(20rem);
   }
 }
 
@@ -269,4 +256,14 @@
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+/* Hide scrollbar for IE, Edge and Firefox */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
 }
