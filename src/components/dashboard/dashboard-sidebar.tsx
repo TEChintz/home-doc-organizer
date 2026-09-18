@@ -14,13 +14,11 @@ import {
   Folder,
   ArrowDownToLine,
   Sparkles,
+  MessageCircle,
+  Inbox,
+  MessagesSquare,
 } from "lucide-react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { DocketLogo } from "@/components/ui/docket-logo";
 
 interface DashboardSidebarProps {
@@ -30,6 +28,9 @@ interface DashboardSidebarProps {
   onCloseMobile?: () => void;
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
+  /** Documents waiting for a human check; shown as a badge on Review. */
+  pendingCount?: number;
+  onSignOut?: () => void;
 }
 
 export function DashboardSidebar({
@@ -37,14 +38,24 @@ export function DashboardSidebar({
   onSelectTab,
   onOpenAddMember,
   onCloseMobile,
+  pendingCount = 0,
+  onSignOut,
   isCollapsed = false,
   onToggleCollapse,
 }: DashboardSidebarProps) {
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: LayoutGrid },
-    { id: "tasks", label: "Documents", icon: CheckSquare, badge: "12+" },
+    { id: "tasks", label: "Documents", icon: CheckSquare },
+    {
+      id: "review",
+      label: "Needs check",
+      icon: Inbox,
+      badge: pendingCount > 0 ? String(pendingCount) : undefined,
+    },
     { id: "calendar", label: "Renewals", icon: Calendar },
-    { id: "analytics", label: "Analytics", icon: BarChart2 },
+    { id: "ask", label: "Ask", icon: MessagesSquare },
+    { id: "whatsapp", label: "WhatsApp", icon: MessageCircle },
+    { id: "analytics", label: "Goals", icon: BarChart2 },
     { id: "team", label: "Family Team", icon: Users2 },
   ];
 
@@ -55,6 +66,10 @@ export function DashboardSidebar({
   ];
 
   const handleItemClick = (id: string) => {
+    if (id === "logout") {
+      onSignOut?.();
+      return;
+    }
     onSelectTab(id);
     if (onCloseMobile) onCloseMobile();
   };
@@ -73,15 +88,10 @@ export function DashboardSidebar({
               isCollapsed ? "justify-center" : "justify-between"
             }`}
           >
-            <Link
-              to="/"
-              className="flex items-center gap-2.5 transition-opacity hover:opacity-85"
-            >
+            <Link to="/" className="flex items-center gap-2.5 transition-opacity hover:opacity-85">
               <DocketLogo className="size-8 text-docket-blue" />
               {!isCollapsed && (
-                <span className="text-xl font-extrabold tracking-tight text-zinc-900">
-                  Docket
-                </span>
+                <span className="text-xl font-extrabold tracking-tight text-zinc-900">Docket</span>
               )}
             </Link>
 
@@ -169,9 +179,7 @@ export function DashboardSidebar({
 
                     <div className="flex items-center gap-3">
                       <Icon
-                        className={`size-4.5 ${
-                          isActive ? "text-docket-blue" : "text-zinc-400"
-                        }`}
+                        className={`size-4.5 ${isActive ? "text-docket-blue" : "text-zinc-400"}`}
                       />
                       <span>{item.label}</span>
                     </div>
@@ -261,9 +269,7 @@ export function DashboardSidebar({
                   Download our <br />
                   <span className="text-white/90">Mobile App</span>
                 </p>
-                <p className="text-[10px] text-zinc-400 mt-0.5">
-                  Get easy in another way
-                </p>
+                <p className="text-[10px] text-zinc-400 mt-0.5">Get easy in another way</p>
               </div>
 
               <button

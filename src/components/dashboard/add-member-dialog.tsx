@@ -17,281 +17,160 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ShieldCheck, Check, Sparkles } from "lucide-react";
-import type { FamilyMember, VaultDocument } from "./dashboard-types";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import type { FamilyMember } from "./dashboard-types";
+import { useCreateMember } from "@/lib/api/hooks";
+
+/**
+ * Add someone to the family.
+ *
+ * The previous version collected a mobile number and a fake OTP. Phone numbers
+ * are attached by the person themselves, from their own handset, via the
+ * WhatsApp linking code — so there is nothing to verify here.
+ */
+
+const RELATIONSHIPS: FamilyMember["relationship"][] = [
+  "Spouse",
+  "Father",
+  "Mother",
+  "Son",
+  "Daughter",
+  "Other",
+];
+
+/** Mirrors the API's roles; a viewer only sees their own and identity documents. */
+const ROLES = [
+  { value: "adult", label: "Adult — can see and manage everything" },
+  { value: "viewer", label: "Viewer — their own documents plus IDs" },
+  { value: "advisor", label: "Advisor — tax and financial only" },
+] as const;
 
 interface AddMemberDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddMember: (newMember: FamilyMember, newDocs: VaultDocument[]) => void;
+  onAddMember: () => void;
 }
 
-export function AddMemberDialog({
-  open,
-  onOpenChange,
-  onAddMember,
-}: AddMemberDialogProps) {
+export function AddMemberDialog({ open, onOpenChange, onAddMember }: AddMemberDialogProps) {
+  const createMember = useCreateMember();
+
   const [name, setName] = useState("");
   const [relationship, setRelationship] = useState<FamilyMember["relationship"]>("Spouse");
-  const [task, setTask] = useState("");
-  const [connectDigilocker, setConnectDigilocker] = useState(true);
-  const [mobileNumber, setMobileNumber] = useState("");
-  const [otpSent, setOtpSent] = useState(false);
-  const [otpCode, setOtpCode] = useState("");
-  const [otpVerified, setOtpVerified] = useState(false);
+  const [role, setRole] = useState<(typeof ROLES)[number]["value"]>("adult");
+  const [dob, setDob] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
-  const handleClose = () => {
+  function handleClose() {
     onOpenChange(false);
     setTimeout(() => {
       setName("");
       setRelationship("Spouse");
-      setTask("");
-      setConnectDigilocker(true);
-      setMobileNumber("");
-      setOtpSent(false);
-      setOtpCode("");
-      setOtpVerified(false);
+      setRole("adult");
+      setDob("");
+      setError(null);
     }, 200);
-  };
+  }
 
-  const handleSendOtp = () => {
-    if (mobileNumber.length >= 10) {
-      setOtpSent(true);
-      setOtpCode("492810");
-    }
-  };
-
-  const getAvatarInfo = (rel: FamilyMember["relationship"]) => {
-    switch (rel) {
-      case "Self":
-        return { emoji: "👨🏻‍💻", bg: "bg-amber-100" };
-      case "Spouse":
-        return { emoji: "👩🏻‍💼", bg: "bg-rose-100" };
-      case "Father":
-        return { emoji: "👨🏼‍🦳", bg: "bg-blue-100" };
-      case "Mother":
-        return { emoji: "👵🏼", bg: "bg-purple-100" };
-      case "Son":
-        return { emoji: "👦🏻", bg: "bg-docket-blue/10" };
-      case "Daughter":
-        return { emoji: "👧🏻", bg: "bg-pink-100" };
-      default:
-        return { emoji: "👤", bg: "bg-zinc-100" };
-    }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!name.trim()) return;
-
-    const id = `mem-${Date.now()}`;
-    const avatar = getAvatarInfo(relationship);
-    const hasLinked = connectDigilocker && otpVerified;
-
-    const newMember: FamilyMember = {
-      id,
-      name: name.trim(),
-      relationship,
-      statusText:
-        task.trim() ||
-        (hasLinked
-          ? "Aadhaar & PAN Auto-Synced via DigiLocker"
-          : "Initial Vault Document Setup"),
-      status: hasLinked ? "Completed" : "In Progress",
-      avatarBg: avatar.bg,
-      avatarEmoji: avatar.emoji,
-      digilockerLinked: hasLinked,
-      ...(hasLinked ? {
-        digilockerAadhaarMasked: "•••• " + Math.floor(1000 + Math.random() * 9000),
-        digilockerLastSync: "Today"
-      } : {}),
-      documentsCount: hasLinked ? 2 : 0,
-    };
-
-    const newDocs: VaultDocument[] = [];
-    if (hasLinked) {
-      newDocs.push(
-        {
-          id: `doc-${Date.now()}-1`,
-          title: "Aadhaar Identity Card",
-          category: "identity",
-          memberId: id,
-          memberName: newMember.name,
-          documentNumber: "•••• •••• " + Math.floor(1000 + Math.random() * 9000),
-          issuingAuthority: "UIDAI",
-          issuedDate: "Synced via DigiLocker",
-          dueDate: "Due date: Nov 26, 2026",
-          iconType: "stripes",
-          iconColor: "#3b82f6",
-          fileSize: "1.2 MB",
-          source: "digilocker",
-        },
-        {
-          id: `doc-${Date.now()}-2`,
-          title: "Income Tax PAN Card",
-          category: "identity",
-          memberId: id,
-          memberName: newMember.name,
-          documentNumber: "ABCDE" + Math.floor(1000 + Math.random() * 9000) + "F",
-          issuingAuthority: "Income Tax Department",
-          issuedDate: "Synced via DigiLocker",
-          dueDate: "Due date: Permanent",
-          iconType: "pinwheel",
-          iconColor: "#f59e0b",
-          fileSize: "820 KB",
-          source: "digilocker",
-        }
-      );
+    setError(null);
+    try {
+      await createMember.mutateAsync({
+        name: name.trim(),
+        relation: relationship,
+        role,
+        dob: dob || null,
+      });
+      onAddMember();
+      toast.success(`${name.trim()} added`);
+      handleClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not add this person");
     }
-
-    onAddMember(newMember, newDocs);
-    handleClose();
-  };
+  }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md rounded-3xl border-zinc-200 bg-white p-6 shadow-2xl">
-        <DialogHeader className="space-y-1">
-          <DialogTitle className="text-xl font-black tracking-tight text-zinc-900">
-            Add Family Member
-          </DialogTitle>
-          <DialogDescription className="text-xs font-medium text-zinc-500">
-            Create a profile to organize documents, link DigiLocker, and track renewals.
+    <Dialog open={open} onOpenChange={(next) => (next ? onOpenChange(true) : handleClose())}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Add a family member</DialogTitle>
+          <DialogDescription>
+            They can connect their own WhatsApp number later from the WhatsApp tab.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
-          <div className="space-y-1.5">
-            <Label htmlFor="memberName" className="text-xs font-bold text-zinc-700">
-              Full Name *
-            </Label>
+          <div className="space-y-2">
+            <Label htmlFor="member-name">Full name</Label>
             <Input
-              id="memberName"
-              placeholder="e.g. Emily Carter"
+              id="member-name"
+              required
+              placeholder="As printed on their documents"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="h-10 rounded-xl border-zinc-200 text-xs focus:ring-docket-blue"
-              required
             />
+            <p className="text-xs text-muted-foreground">
+              Use the spelling on their Aadhaar — we match documents to people by name.
+            </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold text-zinc-700">Relationship *</Label>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="member-relationship">Relationship</Label>
               <Select
                 value={relationship}
-                onValueChange={(val: FamilyMember["relationship"]) => setRelationship(val)}
+                onValueChange={(v) => setRelationship(v as FamilyMember["relationship"])}
               >
-                <SelectTrigger className="h-10 rounded-xl border-zinc-200 text-xs">
-                  <SelectValue placeholder="Relationship" />
+                <SelectTrigger id="member-relationship">
+                  <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="rounded-xl">
-                  <SelectItem value="Spouse">Spouse</SelectItem>
-                  <SelectItem value="Father">Father</SelectItem>
-                  <SelectItem value="Mother">Mother</SelectItem>
-                  <SelectItem value="Son">Son</SelectItem>
-                  <SelectItem value="Daughter">Daughter</SelectItem>
-                  <SelectItem value="Other">Other</SelectItem>
+                <SelectContent>
+                  {RELATIONSHIPS.map((r) => (
+                    <SelectItem key={r} value={r}>
+                      {r}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="taskName" className="text-xs font-bold text-zinc-700">
-                Current Focus
-              </Label>
+            <div className="space-y-2">
+              <Label htmlFor="member-dob">Date of birth</Label>
               <Input
-                id="taskName"
-                placeholder="e.g. Health Insurance"
-                value={task}
-                onChange={(e) => setTask(e.target.value)}
-                className="h-10 rounded-xl border-zinc-200 text-xs focus:ring-docket-blue"
+                id="member-dob"
+                type="date"
+                value={dob}
+                onChange={(e) => setDob(e.target.value)}
               />
             </div>
           </div>
 
-          {/* DigiLocker One-Click Link Option */}
-          <div className="rounded-2xl border border-docket-blue/20 bg-docket-blue/[0.03] p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="size-4.5 text-docket-blue" />
-                <span className="text-xs font-black text-zinc-900">
-                  Connect DigiLocker Account
-                </span>
-              </div>
-              <input
-                type="checkbox"
-                id="dlToggle"
-                checked={connectDigilocker}
-                onChange={(e) => setConnectDigilocker(e.target.checked)}
-                className="size-4 rounded border-zinc-300 text-docket-blue focus:ring-docket-blue cursor-pointer accent-docket-blue"
-              />
-            </div>
-
-            {connectDigilocker && (
-              <div className="space-y-2 pt-2 border-t border-docket-blue/20/60">
-                {!otpSent ? (
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="10-digit mobile number"
-                      value={mobileNumber}
-                      onChange={(e) => setMobileNumber(e.target.value)}
-                      className="h-9 rounded-xl border-zinc-200 bg-white text-xs flex-1"
-                      maxLength={10}
-                    />
-                    <Button
-                      type="button"
-                      size="sm"
-                      onClick={handleSendOtp}
-                      disabled={mobileNumber.length < 10}
-                      className="h-9 rounded-xl text-xs bg-docket-blue hover:bg-docket-blue/90 text-white font-bold cursor-pointer"
-                    >
-                      Send OTP
-                    </Button>
-                  </div>
-                ) : !otpVerified ? (
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="OTP (492810)"
-                      value={otpCode}
-                      onChange={(e) => setOtpCode(e.target.value)}
-                      className="h-9 rounded-xl border-zinc-200 bg-white text-xs flex-1 text-center font-mono font-bold"
-                      maxLength={6}
-                    />
-                    <Button
-                      type="button"
-                      size="sm"
-                      onClick={() => setOtpVerified(true)}
-                      className="h-9 rounded-xl text-xs bg-docket-blue hover:bg-docket-blue/90 text-white font-bold cursor-pointer"
-                    >
-                      Verify
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-docket-blue">
-                    <Check className="size-4" />
-                    <span>DigiLocker verified. Aadhaar & PAN will auto-sync.</span>
-                  </div>
-                )}
-              </div>
-            )}
+          <div className="space-y-2">
+            <Label htmlFor="member-role">What can they see?</Label>
+            <Select value={role} onValueChange={(v) => setRole(v as typeof role)}>
+              <SelectTrigger id="member-role">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {ROLES.map((r) => (
+                  <SelectItem key={r.value} value={r.value}>
+                    {r.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
-          <DialogFooter className="pt-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleClose}
-              className="h-9 rounded-full text-xs font-bold border-zinc-300 bg-white hover:bg-zinc-50 cursor-pointer"
-            >
+          {error && <p className="text-sm text-destructive">{error}</p>}
+
+          <DialogFooter>
+            <Button type="button" variant="ghost" onClick={handleClose}>
               Cancel
             </Button>
-            <Button
-              type="submit"
-              disabled={!name.trim()}
-              className="h-9 rounded-full bg-docket-blue hover:bg-docket-blue/90 text-white text-xs font-black px-6 cursor-pointer shadow-xs"
-            >
-              Add Member
+            <Button type="submit" disabled={createMember.isPending || !name.trim()}>
+              {createMember.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Add member
             </Button>
           </DialogFooter>
         </form>

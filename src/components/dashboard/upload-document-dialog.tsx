@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -8,7 +8,6 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -17,19 +16,30 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Upload, FileText, X } from "lucide-react";
-import type {
-  FamilyMember,
-  VaultDocument,
-  DocumentCategory,
-} from "./dashboard-types";
+import { CheckCircle2, FileText, Loader2, Upload, X } from "lucide-react";
+import { toast } from "sonner";
+import type { FamilyMember } from "./dashboard-types";
+import { useUploadDocument } from "@/lib/api/hooks";
+import { ApiError } from "@/lib/api/client";
+
+/**
+ * Uploading is just "pick a file". The server reads the document and fills in
+ * the details, so asking a human to retype the number and issuer — as the mock
+ * version did — would be busywork and a source of wrong data.
+ *
+ * The upload returns 202 immediately; extraction continues in the background and
+ * the document then appears under "Needs check".
+ */
+
+const MAX_MULTIPART_BYTES = 4 * 1024 * 1024;
+const ACCEPTED = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
 
 interface UploadDocumentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   members: FamilyMember[];
   defaultMemberId?: string | null;
-  onUploadSuccess: (newDoc: VaultDocument) => void;
+  onUploadSuccess: () => void;
 }
 
 export function UploadDocumentDialog({
@@ -39,236 +49,145 @@ export function UploadDocumentDialog({
   defaultMemberId,
   onUploadSuccess,
 }: UploadDocumentDialogProps) {
+  const upload = useUploadDocument();
+  const inputRef = useRef<HTMLInputElement>(null);
+
   const [memberId, setMemberId] = useState(defaultMemberId || members[0]?.id || "");
-  const [title, setTitle] = useState("");
-  const [category, setCategory] = useState<DocumentCategory>("identity");
-  const [documentNumber, setDocumentNumber] = useState("");
-  const [issuingAuthority, setIssuingAuthority] = useState("");
-  const [expiryDate, setExpiryDate] = useState("");
-  const [fileName, setFileName] = useState<string | null>(null);
+  const [file, setFile] = useState<File | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [done, setDone] = useState(false);
 
-  React.useEffect(() => {
-    if (defaultMemberId) {
-      setMemberId(defaultMemberId);
-    } else if (members.length > 0 && !memberId) {
-      setMemberId(members[0]?.id || "");
-    }
-  }, [defaultMemberId, members]);
+  useEffect(() => {
+    if (defaultMemberId) setMemberId(defaultMemberId);
+    else if (members.length > 0 && !memberId) setMemberId(members[0]?.id ?? "");
+  }, [defaultMemberId, members, memberId]);
 
-  const handleClose = () => {
+  function reset() {
+    setFile(null);
+    setError(null);
+    setDone(false);
+  }
+
+  function handleClose() {
     onOpenChange(false);
-    setTimeout(() => {
-      setTitle("");
-      setDocumentNumber("");
-      setIssuingAuthority("");
-      setExpiryDate("");
-      setFileName(null);
-    }, 200);
-  };
+    setTimeout(reset, 200);
+  }
 
-  const handleSimulateFile = (name: string) => {
-    setFileName(name);
-    if (!title) {
-      setTitle(name.replace(/\.[^/.]+$/, "").replace(/_/g, " "));
+  function pick(next: File | null) {
+    setError(null);
+    if (!next) return;
+    if (!ACCEPTED.includes(next.type)) {
+      setError("We can read PDF, JPG, PNG and WEBP files.");
+      return;
     }
-  };
-
-  const getIconForCategory = (cat: DocumentCategory): { iconType: VaultDocument["iconType"]; iconColor: string } => {
-    switch (cat) {
-      case "identity":
-        return { iconType: "stripes", iconColor: "#3b82f6" };
-      case "vehicles":
-        return { iconType: "arc", iconColor: "#0d9488" };
-      case "health":
-        return { iconType: "pinwheel", iconColor: "#f59e0b" };
-      case "finance":
-        return { iconType: "crescent", iconColor: "#ea580c" };
-      default:
-        return { iconType: "dots", iconColor: "#8b5cf6" };
+    if (next.size > MAX_MULTIPART_BYTES) {
+      // The API caps this route at 4 MB; larger files need the signed-URL flow.
+      setError("That file is over 4 MB. Please upload a smaller scan for now.");
+      return;
     }
-  };
+    setFile(next);
+  }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!title.trim() || !memberId) return;
-
-    const member = members.find((m) => m.id === memberId);
-    const memberName = member ? member.name : "Family Member";
-    const iconConfig = getIconForCategory(category);
-
-    const formattedExpiry = expiryDate
-      ? new Date(expiryDate).toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-        })
-      : undefined;
-
-    const newDoc: VaultDocument = {
-      id: `doc-${Date.now()}`,
-      title: title.trim(),
-      category,
-      memberId,
-      memberName,
-      documentNumber: documentNumber || "DOC-" + Math.floor(1000 + Math.random() * 9000),
-      issuingAuthority: issuingAuthority || "Government / Private Issuer",
-      issuedDate: "Today",
-      ...(formattedExpiry ? { expiryDate: formattedExpiry } : {}),
-      dueDate: formattedExpiry ? `Due date: ${formattedExpiry}` : "Due date: Permanent",
-      iconType: iconConfig.iconType,
-      iconColor: iconConfig.iconColor,
-      fileSize: "1.8 MB",
-      source: "upload",
-    };
-
-    onUploadSuccess(newDoc);
-    handleClose();
-  };
+    if (!file) return;
+    setError(null);
+    try {
+      await upload.mutateAsync({ file, ownerMemberId: memberId || null });
+      setDone(true);
+      onUploadSuccess();
+      toast.success("Uploaded — we're reading it now");
+      setTimeout(handleClose, 1200);
+    } catch (err) {
+      if (err instanceof ApiError && err.code === "duplicate_document") {
+        toast.info("You already have this document saved.");
+        handleClose();
+        return;
+      }
+      setError(err instanceof Error ? err.message : "Upload failed");
+    }
+  }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md rounded-3xl border-zinc-200 bg-white p-6 shadow-2xl">
-        <DialogHeader className="space-y-1">
-          <DialogTitle className="text-xl font-black tracking-tight text-zinc-900">
-            Upload Document
-          </DialogTitle>
-          <DialogDescription className="text-xs font-medium text-zinc-500">
-            Add a policy, certificate, or deed to a family member's vault.
+    <Dialog open={open} onOpenChange={(next) => (next ? onOpenChange(true) : handleClose())}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Add a document</DialogTitle>
+          <DialogDescription>
+            Upload a scan or photo — we&apos;ll read the details and ask you to check them.
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4 pt-2">
-          {/* File Dropzone */}
-          <div>
-            {!fileName ? (
-              <div
-                onClick={() => handleSimulateFile("Health_Insurance_Policy.pdf")}
-                className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-zinc-300 bg-zinc-50/70 p-6 text-center hover:border-docket-blue hover:bg-docket-blue/[0.05]/30 transition-all cursor-pointer"
-              >
-                <div className="grid size-10 place-items-center rounded-xl bg-docket-blue/10 text-docket-blue mb-2">
-                  <Upload className="size-5" />
-                </div>
-                <p className="text-xs font-bold text-zinc-800">
-                  Click to select file or drag here
-                </p>
-                <p className="text-[11px] text-zinc-400 mt-0.5">PDF, PNG, JPG up to 25MB</p>
-              </div>
-            ) : (
-              <div className="flex items-center justify-between rounded-2xl border border-docket-blue/20 bg-docket-blue/[0.04] px-3.5 py-2.5">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <FileText className="size-4 text-docket-blue shrink-0" />
-                  <span className="text-xs font-bold text-zinc-900 truncate">
-                    {fileName}
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setFileName(null)}
-                  className="text-zinc-400 hover:text-zinc-700 cursor-pointer"
-                >
-                  <X className="size-3.5" />
-                </button>
-              </div>
-            )}
+        {done ? (
+          <div className="flex flex-col items-center gap-3 py-8 text-center">
+            <CheckCircle2 className="h-8 w-8 text-emerald-600" />
+            <p className="text-sm">Saved. It&apos;ll show up under “Needs check” shortly.</p>
           </div>
-
-          <div className="space-y-1.5">
-            <Label className="text-xs font-bold text-zinc-700">Assign to Member *</Label>
-            <Select value={memberId} onValueChange={setMemberId}>
-              <SelectTrigger className="h-10 rounded-xl border-zinc-200 text-xs">
-                <SelectValue placeholder="Select member" />
-              </SelectTrigger>
-              <SelectContent className="rounded-xl">
-                {members.map((m) => (
-                  <SelectItem key={m.id} value={m.id}>
-                    {m.name} ({m.relationship})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="docTitle" className="text-xs font-bold text-zinc-700">
-                Document Title *
-              </Label>
-              <Input
-                id="docTitle"
-                placeholder="e.g. Star Health Cover"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="h-10 rounded-xl border-zinc-200 text-xs focus:ring-docket-blue"
-                required
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold text-zinc-700">Category</Label>
-              <Select
-                value={category}
-                onValueChange={(val: DocumentCategory) => setCategory(val)}
-              >
-                <SelectTrigger className="h-10 rounded-xl border-zinc-200 text-xs">
-                  <SelectValue />
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+            <div className="space-y-2">
+              <Label htmlFor="upload-member">Whose document is this?</Label>
+              <Select value={memberId} onValueChange={setMemberId}>
+                <SelectTrigger id="upload-member">
+                  <SelectValue placeholder="We'll work it out from the name" />
                 </SelectTrigger>
-                <SelectContent className="rounded-xl">
-                  <SelectItem value="identity">Identity</SelectItem>
-                  <SelectItem value="health">Health & Insurance</SelectItem>
-                  <SelectItem value="vehicles">Vehicles</SelectItem>
-                  <SelectItem value="finance">Finance & Tax</SelectItem>
-                  <SelectItem value="education">Education</SelectItem>
+                <SelectContent>
+                  {members.map((m) => (
+                    <SelectItem key={m.id} value={m.id}>
+                      {m.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
+              <p className="text-xs text-muted-foreground">
+                Leave it if you&apos;re not sure — we match the name on the document.
+              </p>
             </div>
-          </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="docNo" className="text-xs font-bold text-zinc-700">
-                Document / Policy No.
-              </Label>
-              <Input
-                id="docNo"
-                placeholder="e.g. POL-849201"
-                value={documentNumber}
-                onChange={(e) => setDocumentNumber(e.target.value)}
-                className="h-10 rounded-xl border-zinc-200 text-xs focus:ring-docket-blue"
+            <div className="space-y-2">
+              <Label>File</Label>
+              <input
+                ref={inputRef}
+                type="file"
+                accept={ACCEPTED.join(",")}
+                className="hidden"
+                onChange={(e) => pick(e.target.files?.[0] ?? null)}
               />
+
+              {file ? (
+                <div className="flex items-center gap-3 rounded-lg border border-border p-3">
+                  <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  <span className="min-w-0 flex-1 truncate text-sm">{file.name}</span>
+                  <Button type="button" size="icon" variant="ghost" onClick={() => setFile(null)}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => inputRef.current?.click()}
+                  className="flex w-full flex-col items-center gap-2 rounded-lg border border-dashed border-border p-6 text-sm text-muted-foreground transition-colors hover:bg-muted/50"
+                >
+                  <Upload className="h-5 w-5" />
+                  Choose a PDF or photo
+                  <span className="text-xs">Up to 4 MB</span>
+                </button>
+              )}
             </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="expDate" className="text-xs font-bold text-zinc-700">
-                Renewal / Expiry Date
-              </Label>
-              <Input
-                id="expDate"
-                type="date"
-                value={expiryDate}
-                onChange={(e) => setExpiryDate(e.target.value)}
-                className="h-10 rounded-xl border-zinc-200 text-xs focus:ring-docket-blue"
-              />
-            </div>
-          </div>
+            {error && <p className="text-sm text-destructive">{error}</p>}
 
-          <DialogFooter className="pt-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleClose}
-              className="h-9 rounded-full text-xs font-bold border-zinc-300 bg-white hover:bg-zinc-50 cursor-pointer"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={!title.trim() || !memberId}
-              className="h-9 rounded-full bg-docket-blue hover:bg-docket-blue/90 text-white text-xs font-black px-6 cursor-pointer shadow-xs"
-            >
-              Save Document
-            </Button>
-          </DialogFooter>
-        </form>
+            <DialogFooter>
+              <Button type="button" variant="ghost" onClick={handleClose}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={!file || upload.isPending}>
+                {upload.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Upload
+              </Button>
+            </DialogFooter>
+          </form>
+        )}
       </DialogContent>
     </Dialog>
   );
