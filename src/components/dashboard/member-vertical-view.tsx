@@ -43,7 +43,6 @@ export function MemberVerticalView({
   onDeleteDoc,
 }: MemberVerticalViewProps) {
   const [selectedCategory, setSelectedCategory] = useState<DocumentCategory>("all");
-  const [isSyncing, setIsSyncing] = useState(false);
 
   const memberDocs = documents.filter((d) => d.memberId === member.id);
   const filteredDocs =
@@ -59,12 +58,10 @@ export function MemberVerticalView({
     { id: "finance", label: "Finance & Tax" },
   ];
 
+  // Opens the real DigiLocker consent flow. This used to fake a sync with a
+  // setTimeout and claim success without fetching anything.
   const handleSyncDigiLocker = () => {
-    setIsSyncing(true);
-    setTimeout(() => {
-      setIsSyncing(false);
-      alert(`DigiLocker synchronized successfully for ${member.name}. All verified records are up to date.`);
-    }, 800);
+    onConnectDigiLocker(member.id);
   };
 
   return (
@@ -148,11 +145,10 @@ export function MemberVerticalView({
               <button
                 type="button"
                 onClick={handleSyncDigiLocker}
-                disabled={isSyncing}
                 title="Sync latest records from DigiLocker"
                 className="size-9 rounded-full border border-zinc-200 bg-white hover:bg-zinc-50 grid place-items-center text-zinc-600 shadow-xs cursor-pointer transition-colors"
               >
-                <RefreshCw className={`size-3.5 ${isSyncing ? "animate-spin text-docket-blue" : ""}`} />
+                <RefreshCw className="size-3.5" />
               </button>
             </div>
           ) : (

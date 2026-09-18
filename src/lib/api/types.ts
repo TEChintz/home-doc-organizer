@@ -13,10 +13,6 @@ export type ApiLinkCode = components["schemas"]["LinkCode"];
 
 export type DocumentStatus = ApiDocument["status"];
 
-/** Only confirmed documents feed alerts, Q&A and packets. */
-export const CONFIRMED: DocumentStatus = "confirmed";
-export const NEEDS_CONFIRMATION: DocumentStatus = "needs_confirmation";
-
 /** Extracted fields the UI reads. Everything is nullable by design. */
 export interface Extracted {
   holder_name?: string | null;

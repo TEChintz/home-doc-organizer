@@ -122,21 +122,6 @@ export function useUploadDocument() {
   });
 }
 
-const SETTLED = new Set(["needs_confirmation", "confirmed", "failed"]);
-
-/** Poll a processing document until the server finishes reading it. */
-export function useDocumentUntilSettled(id: string | null) {
-  return useQuery({
-    queryKey: qk.document(id ?? ""),
-    queryFn: () => apiFetch<ApiDocumentWithUrl>(`/v1/documents/${id}`),
-    enabled: Boolean(id),
-    refetchInterval: (query) => {
-      const data = query.state.data as ApiDocument | undefined;
-      return data && SETTLED.has(data.status) ? false : 1500;
-    },
-  });
-}
-
 export function usePatchDocument() {
   const qc = useQueryClient();
   return useMutation({

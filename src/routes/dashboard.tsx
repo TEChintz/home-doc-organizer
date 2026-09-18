@@ -10,7 +10,7 @@ import { AskView } from "@/components/dashboard/views/ask-view";
 import { PacketsView } from "@/components/dashboard/views/packets-view";
 import { WhatsAppView } from "@/components/dashboard/views/whatsapp-view";
 import { ConfirmQueueView } from "@/components/dashboard/views/confirm-queue-view";
-import { useDeleteDocument } from "@/lib/api/hooks";
+import { useAlerts, useDeleteDocument } from "@/lib/api/hooks";
 import {
   Search,
   Mail,
@@ -49,6 +49,7 @@ import { Sheet, SheetContent } from "@/components/ui/sheet";
 import {
   type FamilyMember,
   type VaultDocument,
+  DOCUMENT_CATEGORIES,
   type DocumentCategory,
 } from "@/components/dashboard/dashboard-types";
 import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
@@ -109,13 +110,63 @@ function FullScreenSpinner() {
   );
 }
 
+const CATEGORY_LABELS: Record<string, string> = {
+  identity: "Identity",
+  finance: "Finance",
+  tax: "Tax",
+  insurance: "Insurance",
+  health: "Health",
+  vehicles: "Vehicles",
+  property: "Property",
+  education: "Education",
+  other: "Other",
+};
+
+const CATEGORY_PILLS: { id: DocumentCategory; label: string }[] = [
+  { id: "all", label: "All Records" },
+  ...DOCUMENT_CATEGORIES.map((id) => ({ id, label: CATEGORY_LABELS[id] ?? id })),
+];
+
+const ALERT_TITLES: Record<string, string> = {
+  expiry: "Expiring soon",
+  premium_due: "Premium due",
+  missing_nominee: "No nominee on file",
+  name_mismatch: "Name doesn't match",
+  dob_mismatch: "Date of birth doesn't match",
+};
+
 function DashboardPage({ data }: { data: DashboardData }) {
   const { members, documents, memberNames, pendingCount, refresh } = data;
 
   // Active view states
   const [activeTab, setActiveTab] = useState("dashboard");
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
-  const [dashboardInlineMemberId, setDashboardInlineMemberId] = useState<string>("mem-1");
+  // Defaults to the signed-in member. A literal id here (it used to be the mock
+  // "mem-1") never matches a real uuid, which left the panel silently empty.
+  const [dashboardInlineMemberId, setDashboardInlineMemberId] = useState<string | null>(null);
+  const inlineMemberId = dashboardInlineMemberId ?? data.selfMemberId ?? members[0]?.id ?? null;
+
+  const { data: openAlerts = [] } = useAlerts("open");
+
+  const selfMember = members.find((m) => m.id === data.selfMemberId);
+  const firstName = (selfMember?.name ?? "there").split(" ")[0];
+  const greeting = (() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 17) return "Good afternoon";
+    return "Good evening";
+  })();
+
+  // Headline numbers, all derived from what is actually in the vault.
+  const stats = useMemo(() => {
+    const fromDigiLocker = documents.filter((d) => d.source === "digilocker").length;
+    const fromWhatsApp = documents.filter((d) => d.source === "whatsapp").length;
+    const insurance = documents.filter(
+      (d) => d.category === "insurance" || d.category === "health",
+    ).length;
+    const urgent = documents.filter((d) => d.isUrgent).length;
+    return { total: documents.length, fromDigiLocker, fromWhatsApp, insurance, urgent };
+  }, [documents]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<DocumentCategory>("all");
 
@@ -132,7 +183,6 @@ function DashboardPage({ data }: { data: DashboardData }) {
 
   // Notification and sync state
   const [showNotificationToast, setShowNotificationToast] = useState(false);
-  const [isGlobalSyncing, setIsGlobalSyncing] = useState(false);
 
   // Vault timer removed per redesign
 
@@ -187,16 +237,6 @@ function DashboardPage({ data }: { data: DashboardData }) {
       onSuccess: () => refresh(),
       onError: (err) => toast.error(err instanceof Error ? err.message : "Could not delete"),
     });
-  };
-
-  const handleGlobalDigiLockerSync = () => {
-    setIsGlobalSyncing(true);
-    setTimeout(() => {
-      setIsGlobalSyncing(false);
-      alert(
-        "DigiLocker Sync Complete: 6 family certificates and policy hashes verified with UIDAI & Parivahan.",
-      );
-    }, 1000);
   };
 
   return (
@@ -267,7 +307,7 @@ function DashboardPage({ data }: { data: DashboardData }) {
 
               <div className="hidden md:block">
                 <h2 className="text-xl font-black tracking-tight text-zinc-900">
-                  Good morning, Alex 👋
+                  {greeting}, {firstName} 👋
                 </h2>
                 <p className="text-[11px] text-zinc-500 font-medium mt-0.5">
                   Here's the latest from your secure family vault.
@@ -293,11 +333,7 @@ function DashboardPage({ data }: { data: DashboardData }) {
 
               <button
                 type="button"
-                onClick={() =>
-                  alert(
-                    "Vault Messages: 1 renewal notice from Ministry of External Affairs, 1 DigiLocker sync confirmation for Robert Carter.",
-                  )
-                }
+                onClick={() => setActiveTab("calendar")}
                 className="size-10 rounded-full bg-white border border-zinc-200/80 grid place-items-center text-zinc-700 hover:bg-zinc-50 shadow-xs transition-colors cursor-pointer"
                 title="Messages"
               >
@@ -317,11 +353,11 @@ function DashboardPage({ data }: { data: DashboardData }) {
               {/* User Profile Chip matching Totok Michael in Donezo */}
               <div
                 onClick={() => {
-                  setSelectedMemberId("mem-1");
+                  setSelectedMemberId(data.selfMemberId);
                   setActiveTab("dashboard");
                 }}
                 className="flex items-center gap-2.5 pl-1.5 cursor-pointer hover:opacity-90 transition-opacity"
-                title="View Alex Carter's vault"
+                title="View your vault"
               >
                 <div className="size-9.5 rounded-full overflow-hidden border border-zinc-200 bg-amber-100 grid place-items-center text-sm font-bold shrink-0 shadow-xs">
                   <span>👨🏻‍💻</span>
@@ -352,24 +388,32 @@ function DashboardPage({ data }: { data: DashboardData }) {
                   </span>
                 </div>
                 <div className="space-y-2 text-xs">
-                  <div className="flex items-start gap-2.5 p-2 bg-emerald-50/50 rounded-xl">
-                    <ShieldCheck className="size-4 text-docket-blue shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-bold text-zinc-900">DigiLocker Synced</p>
-                      <p className="text-[11px] text-zinc-500">
-                        Sarah Carter's health insurance & Aadhaar synced successfully.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-2.5 p-2 bg-amber-50/50 rounded-xl">
-                    <Clock className="size-4 text-amber-600 shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-bold text-zinc-900">Passport Renewal Notice</p>
-                      <p className="text-[11px] text-zinc-500">
-                        Robert Carter's Indian passport expires in 42 days.
-                      </p>
-                    </div>
-                  </div>
+                  {openAlerts.length === 0 ? (
+                    <p className="p-2 text-[11px] text-zinc-500">
+                      Nothing needs your attention right now.
+                    </p>
+                  ) : (
+                    openAlerts.slice(0, 4).map((alert) => (
+                      <div
+                        key={alert.id}
+                        className={`flex items-start gap-2.5 p-2 rounded-xl ${
+                          alert.severity === "high" ? "bg-amber-50/50" : "bg-emerald-50/50"
+                        }`}
+                      >
+                        {alert.severity === "high" ? (
+                          <Clock className="size-4 text-amber-600 shrink-0 mt-0.5" />
+                        ) : (
+                          <ShieldCheck className="size-4 text-docket-blue shrink-0 mt-0.5" />
+                        )}
+                        <div>
+                          <p className="font-bold text-zinc-900">
+                            {ALERT_TITLES[alert.kind] ?? "Needs attention"}
+                          </p>
+                          <p className="text-[11px] text-zinc-500">{alert.message}</p>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             </div>
@@ -422,15 +466,9 @@ function DashboardPage({ data }: { data: DashboardData }) {
 
               {/* Category Pills */}
               <div className="inline-flex p-1 rounded-full bg-white border border-zinc-200 gap-1 overflow-x-auto shadow-xs">
-                {(
-                  [
-                    { id: "all", label: "All Records" },
-                    { id: "identity", label: "Identity" },
-                    { id: "health", label: "Health & Policies" },
-                    { id: "vehicles", label: "Vehicles" },
-                    { id: "finance", label: "Finance" },
-                  ] as const
-                ).map((cat) => (
+                {/* Driven by the shared category list, so a tax or property
+                    document is filterable rather than invisible. */}
+                {CATEGORY_PILLS.map((cat) => (
                   <button
                     key={cat.id}
                     type="button"
@@ -668,12 +706,15 @@ function DashboardPage({ data }: { data: DashboardData }) {
                   </div>
 
                   <div>
-                    <h3 className="text-3xl lg:text-4xl font-extrabold tracking-tight">24</h3>
+                    <h3 className="text-3xl lg:text-4xl font-extrabold tracking-tight">
+                      {stats.total}
+                    </h3>
                     <div className="mt-1 lg:mt-2 flex items-center gap-1.5 text-[10px] font-semibold text-emerald-200">
-                      <span className="rounded-md bg-white/15 px-1.5 py-0.5 text-[10px] font-bold text-white flex items-center gap-0.5">
-                        5 <span className="text-[8px]">▲</span>
+                      <span>
+                        {stats.fromWhatsApp > 0
+                          ? `${stats.fromWhatsApp} arrived via WhatsApp`
+                          : "Confirmed and searchable"}
                       </span>
-                      <span>Synced via DigiLocker this month</span>
                     </div>
                   </div>
                 </div>
@@ -695,13 +736,10 @@ function DashboardPage({ data }: { data: DashboardData }) {
 
                   <div>
                     <h3 className="text-3xl lg:text-4xl font-extrabold tracking-tight text-zinc-900">
-                      18
+                      {stats.fromDigiLocker}
                     </h3>
                     <div className="mt-1 lg:mt-2 flex items-center gap-1.5 text-[10px] font-semibold text-zinc-500">
-                      <span className="rounded-md border border-zinc-200 bg-zinc-50 px-1.5 py-0.5 text-[10px] font-bold text-zinc-700 flex items-center gap-0.5">
-                        4 <span className="text-[8px]">▲</span>
-                      </span>
-                      <span>Aadhaar & PAN verified</span>
+                      <span>Imported straight from the issuer</span>
                     </div>
                   </div>
                 </div>
@@ -723,13 +761,10 @@ function DashboardPage({ data }: { data: DashboardData }) {
 
                   <div>
                     <h3 className="text-3xl lg:text-4xl font-extrabold tracking-tight text-zinc-900">
-                      5
+                      {stats.insurance}
                     </h3>
                     <div className="mt-1 lg:mt-2 flex items-center gap-1.5 text-[10px] font-semibold text-zinc-500">
-                      <span className="rounded-md border border-zinc-200 bg-zinc-50 px-1.5 py-0.5 text-[10px] font-bold text-zinc-700 flex items-center gap-0.5">
-                        2 <span className="text-[8px]">▲</span>
-                      </span>
-                      <span>Health, Auto & Life covers</span>
+                      <span>Health and insurance cover</span>
                     </div>
                   </div>
                 </div>
@@ -835,7 +870,7 @@ function DashboardPage({ data }: { data: DashboardData }) {
 
                   <div className="flex overflow-x-auto lg:flex-col gap-3 lg:gap-0 lg:space-y-1.5 overflow-y-hidden lg:overflow-y-auto pr-1 flex-1 scrollbar-hide">
                     {members.map((member) => {
-                      const isSelected = dashboardInlineMemberId === member.id;
+                      const isSelected = inlineMemberId === member.id;
                       return (
                         <div
                           key={member.id}
@@ -897,9 +932,7 @@ function DashboardPage({ data }: { data: DashboardData }) {
                 {/* Panel 3: Member Documents - 5 cols */}
                 <div className="lg:col-span-5 rounded-3xl bg-white border border-black/[0.06] p-5 shadow-xs flex flex-col max-h-[500px]">
                   {(() => {
-                    const inlineMember = members.find(
-                      (m) => m.id === (dashboardInlineMemberId || members[0]?.id),
-                    );
+                    const inlineMember = members.find((m) => m.id === inlineMemberId);
                     const inlineDocs = documents.filter((d) => d.memberId === inlineMember?.id);
                     if (!inlineMember) return null;
 
