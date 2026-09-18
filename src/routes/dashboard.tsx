@@ -1,5 +1,16 @@
-import React, { useState, useMemo } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import React, { useState, useMemo, useEffect } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { useAuth } from "@/lib/auth-context";
+import { useDashboardData, type DashboardData } from "@/lib/api/use-dashboard-data";
+import { CreateFamily } from "@/components/dashboard/create-family";
+import { AlertsView } from "@/components/dashboard/views/alerts-view";
+import { AskView } from "@/components/dashboard/views/ask-view";
+import { PacketsView } from "@/components/dashboard/views/packets-view";
+import { WhatsAppView } from "@/components/dashboard/views/whatsapp-view";
+import { ConfirmQueueView } from "@/components/dashboard/views/confirm-queue-view";
+import { useDeleteDocument } from "@/lib/api/hooks";
 import {
   Search,
   Mail,
@@ -36,8 +47,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import {
-  INITIAL_MEMBERS,
-  INITIAL_DOCUMENTS,
   type FamilyMember,
   type VaultDocument,
   type DocumentCategory,
@@ -51,12 +60,57 @@ import { ConnectDigiLockerDialog } from "@/components/dashboard/connect-digilock
 import { GeometricDocIcon } from "@/components/dashboard/geometric-doc-icon";
 
 export const Route = createFileRoute("/dashboard")({
-  component: DashboardPage,
+  component: DashboardRoute,
 });
 
-function DashboardPage() {
-  const [members, setMembers] = useState<FamilyMember[]>(INITIAL_MEMBERS);
-  const [documents, setDocuments] = useState<VaultDocument[]>(INITIAL_DOCUMENTS);
+/** Auth gate: sign-in, then first-run family creation, then the dashboard. */
+function DashboardRoute() {
+  const { session, loading, configured } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && configured && !session) void navigate({ to: "/login" });
+  }, [loading, configured, session, navigate]);
+
+  if (loading) return <FullScreenSpinner />;
+  if (configured && !session) return <FullScreenSpinner />;
+  return <DashboardGate />;
+}
+
+function DashboardGate() {
+  const data = useDashboardData();
+  const { session } = useAuth();
+
+  if (data.needsFamily) {
+    const suggested =
+      (session?.user.user_metadata?.["full_name"] as string | undefined) ??
+      session?.user.email?.split("@")[0];
+    return suggested ? <CreateFamily defaultName={suggested} /> : <CreateFamily />;
+  }
+  if (data.isLoading) return <FullScreenSpinner />;
+  if (data.error) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4 text-center">
+        <div>
+          <p className="text-sm font-medium">Could not reach your vault</p>
+          <p className="mt-1 text-sm text-zinc-500">{data.error.message}</p>
+        </div>
+      </div>
+    );
+  }
+  return <DashboardPage data={data} />;
+}
+
+function FullScreenSpinner() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <Loader2 className="size-5 animate-spin text-zinc-400" />
+    </div>
+  );
+}
+
+function DashboardPage({ data }: { data: DashboardData }) {
+  const { members, documents, memberNames, pendingCount, refresh } = data;
 
   // Active view states
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -84,7 +138,7 @@ function DashboardPage() {
 
   const activeMember = useMemo(
     () => (selectedMemberId ? members.find((m) => m.id === selectedMemberId) : null),
-    [selectedMemberId, members]
+    [selectedMemberId, members],
   );
 
   // Search filter
@@ -97,8 +151,7 @@ function DashboardPage() {
         doc.documentNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
         doc.issuingAuthority.toLowerCase().includes(searchQuery.toLowerCase());
 
-      const matchesCat =
-        selectedCategory === "all" || doc.category === selectedCategory;
+      const matchesCat = selectedCategory === "all" || doc.category === selectedCategory;
 
       return matchesSearch && matchesCat;
     });
@@ -115,68 +168,34 @@ function DashboardPage() {
     });
   }, [members, searchQuery]);
 
-  const handleAddMember = (newMember: FamilyMember, newDocs: VaultDocument[]) => {
-    setMembers((prev) => [...prev, newMember]);
-    if (newDocs.length > 0) {
-      setDocuments((prev) => [...newDocs, ...prev]);
-    }
-    // Navigate directly into this newly added member's detailed vertical
-    setSelectedMemberId(newMember.id);
+  const deleteDocument = useDeleteDocument();
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = () => {
+    void signOut().then(() => navigate({ to: "/" }));
   };
 
-  const handleUploadSuccess = (newDoc: VaultDocument) => {
-    setDocuments((prev) => [newDoc, ...prev]);
-    setMembers((prev) =>
-      prev.map((m) =>
-        m.id === newDoc.memberId
-          ? { ...m, documentsCount: m.documentsCount + 1 }
-          : m
-      )
-    );
-  };
+  // The server is the source of truth now: every mutation refetches rather than
+  // patching local arrays, so alert counts and member totals stay consistent.
+  const handleAddMember = () => refresh();
+  const handleUploadSuccess = () => refresh();
+  const handleConnectDigiLockerSuccess = () => refresh();
 
   const handleDeleteDoc = (id: string) => {
-    const docToDelete = documents.find((d) => d.id === id);
-    setDocuments((prev) => prev.filter((d) => d.id !== id));
-    if (docToDelete) {
-      setMembers((prev) =>
-        prev.map((m) =>
-          m.id === docToDelete.memberId
-            ? { ...m, documentsCount: Math.max(0, m.documentsCount - 1) }
-            : m
-        )
-      );
-    }
-  };
-
-  const handleConnectDigiLockerSuccess = (memberId: string, newDocs: VaultDocument[]) => {
-    setMembers((prev) =>
-      prev.map((m) => {
-        if (m.id === memberId) {
-          const { urgentAlert, ...rest } = m;
-          return {
-            ...rest,
-            digilockerLinked: true,
-            digilockerAadhaarMasked: "•••• " + Math.floor(1000 + Math.random() * 9000),
-            digilockerLastSync: "Today",
-            statusText: "DigiLocker Auto-Synced",
-            status: "Completed",
-            documentsCount: m.documentsCount + newDocs.length,
-          };
-        }
-        return m;
-      })
-    );
-    if (newDocs.length > 0) {
-      setDocuments((prev) => [...newDocs, ...prev]);
-    }
+    deleteDocument.mutate(id, {
+      onSuccess: () => refresh(),
+      onError: (err) => toast.error(err instanceof Error ? err.message : "Could not delete"),
+    });
   };
 
   const handleGlobalDigiLockerSync = () => {
     setIsGlobalSyncing(true);
     setTimeout(() => {
       setIsGlobalSyncing(false);
-      alert("DigiLocker Sync Complete: 6 family certificates and policy hashes verified with UIDAI & Parivahan.");
+      alert(
+        "DigiLocker Sync Complete: 6 family certificates and policy hashes verified with UIDAI & Parivahan.",
+      );
     }, 1000);
   };
 
@@ -184,8 +203,9 @@ function DashboardPage() {
     <div className="min-h-screen bg-[#f3f4f7] text-zinc-900 flex antialiased selection:bg-docket-blue/20 selection:text-docket-blue">
       {/* 1. DESKTOP COLLAPSIBLE SIDEBAR matching Donezo */}
       <div
-        className={`hidden md:block shrink-0 h-screen sticky top-0 transition-all duration-300 z-30 ${isSidebarCollapsed ? "w-[72px]" : "w-60 xl:w-64"
-          }`}
+        className={`hidden md:block shrink-0 h-screen sticky top-0 transition-all duration-300 z-30 ${
+          isSidebarCollapsed ? "w-[72px]" : "w-60 xl:w-64"
+        }`}
       >
         <DashboardSidebar
           activeTab={activeTab}
@@ -194,6 +214,8 @@ function DashboardPage() {
             setSelectedMemberId(null);
           }}
           onOpenAddMember={() => setAddMemberOpen(true)}
+          pendingCount={pendingCount}
+          onSignOut={handleSignOut}
           isCollapsed={isSidebarCollapsed}
           onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
         />
@@ -213,6 +235,8 @@ function DashboardPage() {
               setMobileSidebarOpen(false);
               setAddMemberOpen(true);
             }}
+            pendingCount={pendingCount}
+            onSignOut={handleSignOut}
             onCloseMobile={() => setMobileSidebarOpen(false)}
             isCollapsed={false}
           />
@@ -235,13 +259,19 @@ function DashboardPage() {
               </button>
 
               <div className="md:hidden flex items-center gap-2">
-                <div className="size-8 rounded-lg bg-docket-blue text-white grid place-items-center font-bold text-sm shadow-xs">D</div>
+                <div className="size-8 rounded-lg bg-docket-blue text-white grid place-items-center font-bold text-sm shadow-xs">
+                  D
+                </div>
                 <span className="font-extrabold text-zinc-900 tracking-tight text-lg">Docket</span>
               </div>
 
               <div className="hidden md:block">
-                <h2 className="text-xl font-black tracking-tight text-zinc-900">Good morning, Alex 👋</h2>
-                <p className="text-[11px] text-zinc-500 font-medium mt-0.5">Here's the latest from your secure family vault.</p>
+                <h2 className="text-xl font-black tracking-tight text-zinc-900">
+                  Good morning, Alex 👋
+                </h2>
+                <p className="text-[11px] text-zinc-500 font-medium mt-0.5">
+                  Here's the latest from your secure family vault.
+                </p>
               </div>
             </div>
 
@@ -265,7 +295,7 @@ function DashboardPage() {
                 type="button"
                 onClick={() =>
                   alert(
-                    "Vault Messages: 1 renewal notice from Ministry of External Affairs, 1 DigiLocker sync confirmation for Robert Carter."
+                    "Vault Messages: 1 renewal notice from Ministry of External Affairs, 1 DigiLocker sync confirmation for Robert Carter.",
                   )
                 }
                 className="size-10 rounded-full bg-white border border-zinc-200/80 grid place-items-center text-zinc-700 hover:bg-zinc-50 shadow-xs transition-colors cursor-pointer"
@@ -317,7 +347,9 @@ function DashboardPage() {
               <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-xl space-y-2">
                 <div className="flex items-center justify-between pb-1.5 border-b border-zinc-100">
                   <span className="text-xs font-bold text-zinc-900">Vault Notifications</span>
-                  <span className="text-[10px] text-docket-blue font-bold cursor-pointer">Mark all read</span>
+                  <span className="text-[10px] text-docket-blue font-bold cursor-pointer">
+                    Mark all read
+                  </span>
                 </div>
                 <div className="space-y-2 text-xs">
                   <div className="flex items-start gap-2.5 p-2 bg-emerald-50/50 rounded-xl">
@@ -403,10 +435,11 @@ function DashboardPage() {
                     key={cat.id}
                     type="button"
                     onClick={() => setSelectedCategory(cat.id)}
-                    className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition-all cursor-pointer whitespace-nowrap ${selectedCategory === cat.id
+                    className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition-all cursor-pointer whitespace-nowrap ${
+                      selectedCategory === cat.id
                         ? "bg-docket-blue text-white font-bold shadow-xs"
                         : "text-zinc-600 hover:text-docket-blue hover:bg-docket-blue/5"
-                      }`}
+                    }`}
                   >
                     {cat.label} (
                     {cat.id === "all"
@@ -445,10 +478,11 @@ function DashboardPage() {
                         {doc.dueDate}
                       </span>
                       <span
-                        className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${doc.source === "digilocker"
+                        className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
+                          doc.source === "digilocker"
                             ? "bg-blue-50 border border-blue-200 text-docket-blue"
                             : "bg-zinc-100 text-zinc-700"
-                          }`}
+                        }`}
                       >
                         {doc.source === "digilocker" ? "DigiLocker" : "Uploaded"}
                       </span>
@@ -458,6 +492,27 @@ function DashboardPage() {
                 ))}
               </div>
             </div>
+          ) : activeTab === "calendar" ? (
+            <AlertsView memberNames={memberNames} />
+          ) : activeTab === "analytics" ? (
+            <PacketsView
+              members={members}
+              onUploadFor={(memId) => {
+                setUploadForMemberId(memId);
+                setUploadDocOpen(true);
+              }}
+            />
+          ) : activeTab === "ask" ? (
+            <AskView
+              onOpenDocument={(docId) => {
+                const hit = documents.find((d) => d.id === docId);
+                if (hit) setInspectingDoc(hit);
+              }}
+            />
+          ) : activeTab === "whatsapp" ? (
+            <WhatsAppView />
+          ) : activeTab === "review" ? (
+            <ConfirmQueueView />
           ) : activeTab === "team" ? (
             /* Dedicated Family Members Grid View */
             <div className="space-y-5">
@@ -467,7 +522,8 @@ function DashboardPage() {
                     Family Vault Members
                   </h1>
                   <p className="text-xs text-zinc-500 font-medium mt-1">
-                    Manage DigiLocker accounts, passports, health insurance, and records for everyone.
+                    Manage DigiLocker accounts, passports, health insurance, and records for
+                    everyone.
                   </p>
                 </div>
 
@@ -494,9 +550,7 @@ function DashboardPage() {
                           <span>{member.avatarEmoji}</span>
                         </div>
                         <div>
-                          <h3 className="text-sm font-extrabold text-zinc-900">
-                            {member.name}
-                          </h3>
+                          <h3 className="text-sm font-extrabold text-zinc-900">{member.name}</h3>
                           <span className="inline-block text-[11px] font-semibold text-zinc-400">
                             {member.relationship}
                           </span>
@@ -505,16 +559,23 @@ function DashboardPage() {
 
                       {/* Clean unified status badge */}
                       <span className="rounded-md border border-zinc-200 bg-white px-2 py-0.5 text-[9px] font-bold text-zinc-600 flex items-center gap-1.5 shadow-sm">
-                        <div className={`size-1.5 rounded-full ${member.status === "Completed" ? "bg-emerald-500" :
-                            member.status === "In Progress" ? "bg-amber-500" : "bg-rose-500"
-                          }`} />
+                        <div
+                          className={`size-1.5 rounded-full ${
+                            member.status === "Completed"
+                              ? "bg-emerald-500"
+                              : member.status === "In Progress"
+                                ? "bg-amber-500"
+                                : "bg-rose-500"
+                          }`}
+                        />
                         {member.status}
                       </span>
                     </div>
 
                     <div className="mt-3">
                       <p className="text-xs text-zinc-500 font-medium truncate">
-                        Status: <span className="font-semibold text-zinc-800">{member.statusText}</span>
+                        Status:{" "}
+                        <span className="font-semibold text-zinc-800">{member.statusText}</span>
                       </p>
                       {member.urgentAlert && (
                         <p className="text-[11px] text-amber-600 font-bold mt-1 truncate">
@@ -633,7 +694,9 @@ function DashboardPage() {
                   </div>
 
                   <div>
-                    <h3 className="text-3xl lg:text-4xl font-extrabold tracking-tight text-zinc-900">18</h3>
+                    <h3 className="text-3xl lg:text-4xl font-extrabold tracking-tight text-zinc-900">
+                      18
+                    </h3>
                     <div className="mt-1 lg:mt-2 flex items-center gap-1.5 text-[10px] font-semibold text-zinc-500">
                       <span className="rounded-md border border-zinc-200 bg-zinc-50 px-1.5 py-0.5 text-[10px] font-bold text-zinc-700 flex items-center gap-0.5">
                         4 <span className="text-[8px]">▲</span>
@@ -659,7 +722,9 @@ function DashboardPage() {
                   </div>
 
                   <div>
-                    <h3 className="text-3xl lg:text-4xl font-extrabold tracking-tight text-zinc-900">5</h3>
+                    <h3 className="text-3xl lg:text-4xl font-extrabold tracking-tight text-zinc-900">
+                      5
+                    </h3>
                     <div className="mt-1 lg:mt-2 flex items-center gap-1.5 text-[10px] font-semibold text-zinc-500">
                       <span className="rounded-md border border-zinc-200 bg-zinc-50 px-1.5 py-0.5 text-[10px] font-bold text-zinc-700 flex items-center gap-0.5">
                         2 <span className="text-[8px]">▲</span>
@@ -685,7 +750,9 @@ function DashboardPage() {
                   </div>
 
                   <div>
-                    <h3 className="text-3xl lg:text-4xl font-extrabold tracking-tight text-zinc-900">2</h3>
+                    <h3 className="text-3xl lg:text-4xl font-extrabold tracking-tight text-zinc-900">
+                      2
+                    </h3>
                     <p className="mt-1 lg:mt-2 text-[10px] font-semibold text-amber-600">
                       Passport (42d) • Car Policy (11d)
                     </p>
@@ -709,7 +776,11 @@ function DashboardPage() {
                       <div className="grid size-8 lg:size-8 place-items-center rounded-full bg-zinc-100 text-zinc-500 lg:group-hover:bg-zinc-200 transition-colors">
                         <Plus className="size-4 lg:size-4" />
                       </div>
-                      <span className="text-center lg:text-left">Add<br className="lg:hidden" />Member</span>
+                      <span className="text-center lg:text-left">
+                        Add
+                        <br className="lg:hidden" />
+                        Member
+                      </span>
                     </button>
 
                     <button
@@ -723,13 +794,17 @@ function DashboardPage() {
                       <div className="grid size-8 lg:size-8 place-items-center rounded-full bg-zinc-100 text-zinc-500 lg:group-hover:bg-zinc-200 transition-colors">
                         <Upload className="size-4 lg:size-4" />
                       </div>
-                      <span className="text-center lg:text-left">Upload<br className="lg:hidden" />Doc</span>
+                      <span className="text-center lg:text-left">
+                        Upload
+                        <br className="lg:hidden" />
+                        Doc
+                      </span>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => {
-                        const target = members.find(m => !m.digilockerLinked) || members[0];
+                        const target = members.find((m) => !m.digilockerLinked) || members[0];
                         if (target) setConnectDlTargetMember(target);
                       }}
                       className="flex flex-col lg:flex-row items-center justify-center lg:justify-start gap-1.5 lg:gap-3 w-full lg:min-w-0 h-20 lg:h-auto px-2 lg:px-0 rounded-2xl border border-docket-blue/20 lg:border-none bg-docket-blue lg:bg-transparent text-white lg:text-docket-blue hover:bg-docket-blue/90 lg:hover:bg-transparent transition-colors text-[10px] leading-tight lg:text-sm font-bold shadow-xs lg:shadow-none cursor-pointer"
@@ -737,7 +812,11 @@ function DashboardPage() {
                       <div className="grid size-8 lg:size-8 place-items-center rounded-full bg-white/20 lg:bg-docket-blue/10 text-white lg:text-docket-blue lg:group-hover:bg-docket-blue/20 transition-colors">
                         <ShieldCheck className="size-4 lg:size-4" />
                       </div>
-                      <span className="text-center lg:text-left">Sync<br className="lg:hidden" />DL</span>
+                      <span className="text-center lg:text-left">
+                        Sync
+                        <br className="lg:hidden" />
+                        DL
+                      </span>
                     </button>
                   </div>
                 </div>
@@ -761,10 +840,11 @@ function DashboardPage() {
                         <div
                           key={member.id}
                           onClick={() => setDashboardInlineMemberId(member.id)}
-                          className={`flex flex-col lg:flex-row items-center lg:justify-between gap-3 p-3 lg:p-2 rounded-2xl cursor-pointer transition-all border min-w-[120px] lg:min-w-0 snap-start shrink-0 relative lg:static ${isSelected
+                          className={`flex flex-col lg:flex-row items-center lg:justify-between gap-3 p-3 lg:p-2 rounded-2xl cursor-pointer transition-all border min-w-[120px] lg:min-w-0 snap-start shrink-0 relative lg:static ${
+                            isSelected
                               ? "bg-docket-blue/[0.03] border-docket-blue/20 shadow-sm"
                               : "bg-transparent border-transparent hover:bg-zinc-50/50"
-                            }`}
+                          }`}
                         >
                           <div className="flex flex-col lg:flex-row items-center gap-2 lg:gap-2.5 min-w-0 text-center lg:text-left w-full">
                             {/* Unified clean avatar background */}
@@ -772,22 +852,41 @@ function DashboardPage() {
                               <span>{member.avatarEmoji}</span>
                             </div>
                             <div className="min-w-0 w-full px-1">
-                              <h4 className={`text-xs font-bold truncate ${isSelected ? "text-docket-blue" : "text-zinc-900"}`}>
+                              <h4
+                                className={`text-xs font-bold truncate ${isSelected ? "text-docket-blue" : "text-zinc-900"}`}
+                              >
                                 {member.name}
                               </h4>
                               <p className="text-[10px] text-zinc-400 truncate mt-0.5 flex flex-col lg:block">
                                 <span className="lg:hidden">Status:</span>
                                 <span className="hidden lg:inline">Status: </span>
-                                <span className="font-semibold text-zinc-600 truncate">{member.statusText}</span>
+                                <span className="font-semibold text-zinc-600 truncate">
+                                  {member.statusText}
+                                </span>
                               </p>
                             </div>
                           </div>
 
                           {/* Clean Status Dot */}
                           <div className="shrink-0 flex items-center pr-1 absolute top-3 right-3 lg:static">
-                            {member.status === "Completed" && <div className="size-2 lg:size-1.5 rounded-full bg-emerald-500" title="Completed" />}
-                            {member.status === "In Progress" && <div className="size-2 lg:size-1.5 rounded-full bg-amber-500" title="In Progress" />}
-                            {member.status === "Pending" && <div className="size-2 lg:size-1.5 rounded-full bg-rose-500" title="Pending" />}
+                            {member.status === "Completed" && (
+                              <div
+                                className="size-2 lg:size-1.5 rounded-full bg-emerald-500"
+                                title="Completed"
+                              />
+                            )}
+                            {member.status === "In Progress" && (
+                              <div
+                                className="size-2 lg:size-1.5 rounded-full bg-amber-500"
+                                title="In Progress"
+                              />
+                            )}
+                            {member.status === "Pending" && (
+                              <div
+                                className="size-2 lg:size-1.5 rounded-full bg-rose-500"
+                                title="Pending"
+                              />
+                            )}
                           </div>
                         </div>
                       );
@@ -798,8 +897,10 @@ function DashboardPage() {
                 {/* Panel 3: Member Documents - 5 cols */}
                 <div className="lg:col-span-5 rounded-3xl bg-white border border-black/[0.06] p-5 shadow-xs flex flex-col max-h-[500px]">
                   {(() => {
-                    const inlineMember = members.find(m => m.id === (dashboardInlineMemberId || members[0]?.id));
-                    const inlineDocs = documents.filter(d => d.memberId === inlineMember?.id);
+                    const inlineMember = members.find(
+                      (m) => m.id === (dashboardInlineMemberId || members[0]?.id),
+                    );
+                    const inlineDocs = documents.filter((d) => d.memberId === inlineMember?.id);
                     if (!inlineMember) return null;
 
                     return (
@@ -810,8 +911,12 @@ function DashboardPage() {
                               <span>{inlineMember.avatarEmoji}</span>
                             </div>
                             <div>
-                              <h3 className="text-sm font-extrabold text-zinc-900">{inlineMember.name}'s Documents</h3>
-                              <p className="text-[11px] text-zinc-500 mt-0.5">{inlineDocs.length} items found</p>
+                              <h3 className="text-sm font-extrabold text-zinc-900">
+                                {inlineMember.name}'s Documents
+                              </h3>
+                              <p className="text-[11px] text-zinc-500 mt-0.5">
+                                {inlineDocs.length} items found
+                              </p>
                             </div>
                           </div>
                           <button
@@ -830,7 +935,7 @@ function DashboardPage() {
                               <p className="text-xs font-medium">No documents yet</p>
                             </div>
                           ) : (
-                            inlineDocs.map(doc => (
+                            inlineDocs.map((doc) => (
                               <div
                                 key={doc.id}
                                 onClick={() => setInspectingDoc(doc)}
@@ -845,7 +950,8 @@ function DashboardPage() {
                                       {doc.title}
                                     </h5>
                                     <p className="text-[10px] text-zinc-400 truncate mt-0.5">
-                                      {doc.issuingAuthority} • <span className="font-mono">{doc.documentNumber}</span>
+                                      {doc.issuingAuthority} •{" "}
+                                      <span className="font-mono">{doc.documentNumber}</span>
                                     </p>
                                   </div>
                                 </div>
@@ -857,10 +963,11 @@ function DashboardPage() {
                                     {doc.dueDate}
                                   </span>
                                   <span
-                                    className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${doc.source === "digilocker"
+                                    className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${
+                                      doc.source === "digilocker"
                                         ? "bg-blue-50 border border-blue-200 text-docket-blue"
                                         : "bg-zinc-100 text-zinc-700 border border-zinc-200"
-                                      }`}
+                                    }`}
                                   >
                                     {doc.source === "digilocker" ? "DigiLocker" : "Uploaded"}
                                   </span>

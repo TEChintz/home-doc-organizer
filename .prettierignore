@@ -6,3 +6,5 @@ pnpm-lock.yaml
 package-lock.json
 bun.lock
 routeTree.gen.ts
+# generated from the API spec by `npm run api:types`
+src/lib/api/schema.d.ts

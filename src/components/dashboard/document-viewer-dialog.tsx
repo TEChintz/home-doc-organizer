@@ -8,9 +8,12 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Download, FileText, Trash2, ShieldCheck } from "lucide-react";
+import { Download, FileText, Loader2, Trash2, ShieldCheck } from "lucide-react";
+import { toast } from "sonner";
 import type { VaultDocument } from "./dashboard-types";
 import { GeometricDocIcon } from "./geometric-doc-icon";
+import { apiFetch } from "@/lib/api/client";
+import type { ApiDocumentWithUrl } from "@/lib/api/types";
 
 interface DocumentViewerDialogProps {
   document: VaultDocument | null;
@@ -25,7 +28,29 @@ export function DocumentViewerDialog({
   onOpenChange,
   onDelete,
 }: DocumentViewerDialogProps) {
+  const [downloading, setDownloading] = React.useState(false);
+
   if (!document) return null;
+
+  /**
+   * The file itself is never public. Ask the API for a URL signed for 300
+   * seconds and open that, rather than storing a long-lived link anywhere.
+   */
+  const handleDownload = async () => {
+    setDownloading(true);
+    try {
+      const full = await apiFetch<ApiDocumentWithUrl>(`/v1/documents/${document.id}`);
+      if (!full.download_url) {
+        toast.error("No file is attached to this document.");
+        return;
+      }
+      window.open(full.download_url, "_blank", "noopener,noreferrer");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not fetch the file");
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -42,13 +67,18 @@ export function DocumentViewerDialog({
                   : "bg-zinc-100 text-zinc-600"
               }`}
             >
-              {document.source === "digilocker" && <ShieldCheck className="size-3 text-docket-blue" />}
+              {document.source === "digilocker" && (
+                <ShieldCheck className="size-3 text-docket-blue" />
+              )}
               {document.source === "digilocker" ? "DigiLocker Verified" : "Uploaded Document"}
             </span>
           </div>
 
           <div className="flex items-center gap-3 pt-1">
-            <GeometricDocIcon type={docTypeOrDefault(document.iconType)} color={document.iconColor} />
+            <GeometricDocIcon
+              type={docTypeOrDefault(document.iconType)}
+              color={document.iconColor}
+            />
             <DialogTitle className="text-base font-extrabold tracking-tight text-zinc-900">
               {document.title}
             </DialogTitle>
@@ -112,13 +142,15 @@ export function DocumentViewerDialog({
             </Button>
             <Button
               size="sm"
-              onClick={() => {
-                alert(`Downloading ${document.title}...`);
-                onOpenChange(false);
-              }}
+              onClick={() => void handleDownload()}
+              disabled={downloading}
               className="rounded-full bg-docket-blue hover:bg-docket-blue/90 text-white text-xs font-bold px-4 cursor-pointer gap-1.5 shadow-xs"
             >
-              <Download className="size-3.5" />
+              {downloading ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : (
+                <Download className="size-3.5" />
+              )}
               Download
             </Button>
           </div>
