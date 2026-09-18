@@ -49,6 +49,8 @@ export function ConnectDigiLockerDialog({
 
   const [stage, setStage] = useState<Stage>("intro");
   const [requestId, setRequestId] = useState<string | null>(null);
+  const [consentUrl, setConsentUrl] = useState<string | null>(null);
+  const [popupBlocked, setPopupBlocked] = useState(false);
   const [imported, setImported] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
@@ -59,6 +61,8 @@ export function ConnectDigiLockerDialog({
       const t = setTimeout(() => {
         setStage("intro");
         setRequestId(null);
+        setConsentUrl(null);
+        setPopupBlocked(false);
         setImported(0);
         setError(null);
       }, 200);
@@ -93,12 +97,32 @@ export function ConnectDigiLockerDialog({
 
   async function start() {
     setError(null);
+
+    // Open the tab synchronously, while we still hold the click's user-gesture
+    // token. Calling window.open after the await below gets silently blocked by
+    // every popup blocker, which left this dialog stuck on "waiting" forever.
+    //
+    // No "noopener" here: with that feature set, window.open returns null by
+    // spec, and we need the handle to point the tab at the consent URL once the
+    // request comes back. `opener` is cleared manually instead.
+    const tab = window.open("about:blank", "_blank");
+    if (tab) tab.opener = null;
+
     try {
       const request = await createRequest.mutateAsync([]);
       setRequestId(request.id);
+      setConsentUrl(request.url);
       setStage("waiting");
-      window.open(request.url, "_blank", "noopener,noreferrer");
+
+      if (tab && !tab.closed) {
+        tab.location.href = request.url;
+      } else {
+        // Blocked anyway (or opened in a context we can't steer): the waiting
+        // screen shows a plain link the user can click instead.
+        setPopupBlocked(true);
+      }
     } catch (err) {
+      tab?.close();
       setError(err instanceof Error ? err.message : "Could not start DigiLocker");
     }
   }
@@ -157,9 +181,23 @@ export function ConnectDigiLockerDialog({
             <Loader2 className="h-6 w-6 animate-spin text-docket-blue" />
             <p className="text-sm">
               {stage === "waiting"
-                ? "Waiting for you to approve in the DigiLocker tab…"
+                ? popupBlocked
+                  ? "Your browser blocked the DigiLocker tab."
+                  : "Waiting for you to approve in the DigiLocker tab…"
                 : "Bringing your documents across…"}
             </p>
+
+            {stage === "waiting" && consentUrl && (
+              <a
+                href={consentUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm font-medium text-docket-blue underline underline-offset-4"
+              >
+                {popupBlocked ? "Open DigiLocker" : "Tab didn't open? Open it here"}
+              </a>
+            )}
+
             {stage === "waiting" && (
               <Button variant="ghost" size="sm" onClick={() => setStage("intro")}>
                 Cancel
