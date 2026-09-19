@@ -786,10 +786,16 @@ function DashboardPage({ data }: { data: DashboardData }) {
 
                   <div>
                     <h3 className="text-3xl lg:text-4xl font-extrabold tracking-tight text-zinc-900">
-                      2
+                      {stats.urgent}
                     </h3>
                     <p className="mt-1 lg:mt-2 text-[10px] font-semibold text-amber-600">
-                      Passport (42d) • Car Policy (11d)
+                      {stats.urgent === 0
+                        ? "Nothing needs attention"
+                        : documents
+                            .filter((d) => d.isUrgent)
+                            .slice(0, 2)
+                            .map((d) => d.title)
+                            .join(" • ")}
                     </p>
                   </div>
                 </div>
