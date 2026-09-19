@@ -6,13 +6,10 @@ import {
   Calendar,
   BarChart2,
   Users2,
-  Settings,
-  HelpCircle,
   LogOut,
   PanelLeftClose,
   PanelLeftOpen,
   Folder,
-  ArrowDownToLine,
   Sparkles,
   MessageCircle,
   Inbox,
@@ -60,8 +57,6 @@ export function DashboardSidebar({
   ];
 
   const generalItems = [
-    { id: "settings", label: "Settings", icon: Settings },
-    { id: "help", label: "Help", icon: HelpCircle },
     { id: "logout", label: "Logout", icon: LogOut },
   ];
 
@@ -168,18 +163,13 @@ export function DashboardSidebar({
                     onClick={() => handleItemClick(item.id)}
                     className={`relative flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-xs font-semibold transition-all cursor-pointer ${
                       isActive
-                        ? "text-zinc-900 font-bold bg-zinc-50"
-                        : "text-zinc-500 hover:bg-zinc-50/80 hover:text-zinc-900"
+                        ? "text-zinc-900 font-bold bg-zinc-100 shadow-sm border border-zinc-200/50"
+                        : "text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900"
                     }`}
                   >
-                    {/* Active Left Indicator Bar matching Donezo */}
-                    {isActive && (
-                      <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-docket-blue rounded-r-md" />
-                    )}
-
                     <div className="flex items-center gap-3">
                       <Icon
-                        className={`size-4.5 ${isActive ? "text-docket-blue" : "text-zinc-400"}`}
+                        className={`size-4.5 transition-colors ${isActive ? "text-docket-blue" : "text-zinc-400 group-hover:text-zinc-500"}`}
                       />
                       <span>{item.label}</span>
                     </div>
@@ -243,45 +233,6 @@ export function DashboardSidebar({
           </div>
         </div>
 
-        {/* Bottom Card matching "Download our Mobile App" in the mockup */}
-        {!isCollapsed && (
-          <div className="mt-6 rounded-2xl bg-zinc-950 p-4 text-white relative overflow-hidden shadow-sm">
-            {/* Subtle SVG wave background */}
-            <svg
-              className="absolute -right-6 -bottom-6 w-36 h-36 opacity-15 pointer-events-none text-docket-blue/50"
-              viewBox="0 0 100 100"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-            >
-              <path d="M0 50 Q 25 20, 50 50 T 100 50" />
-              <path d="M0 65 Q 25 35, 50 65 T 100 65" />
-              <path d="M0 80 Q 25 50, 50 80 T 100 80" />
-            </svg>
-
-            <div className="relative z-10 space-y-2">
-              <div className="grid size-7 place-items-center rounded-lg bg-white/10 text-white backdrop-blur-xs">
-                <ArrowDownToLine className="size-3.5" />
-              </div>
-
-              <div>
-                <p className="text-xs font-bold leading-tight">
-                  Download our <br />
-                  <span className="text-white/90">Mobile App</span>
-                </p>
-                <p className="text-[10px] text-zinc-400 mt-0.5">Get easy in another way</p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => alert("Docket Mobile App downloading for iOS & Android...")}
-                className="w-full rounded-xl bg-docket-blue hover:bg-docket-blue/90 transition-colors py-1.5 text-center text-xs font-bold text-white shadow-xs cursor-pointer"
-              >
-                Download
-              </button>
-            </div>
-          </div>
-        )}
       </aside>
     </TooltipProvider>
   );

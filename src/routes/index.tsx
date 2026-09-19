@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ContainerScroll } from "../components/ui/container-scroll-animation";
 import {
+  ArrowUpRight,
   Bell,
   CalendarClock,
   Car,
@@ -17,12 +18,16 @@ import {
   Landmark,
   LockKeyhole,
   Mail,
+  Plus,
+  Search,
   ShieldCheck,
   Sparkles,
   Tag,
   UploadCloud,
   UsersRound,
 } from "lucide-react";
+import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
+import { GeometricDocIcon } from "@/components/dashboard/geometric-doc-icon";
 import { DocketLogo } from "@/components/ui/docket-logo";
 
 import { Button } from "@/components/ui/button";
@@ -114,84 +119,206 @@ function SectionLabel({ children, dark = false }: { children: React.ReactNode; d
 }
 
 function DashboardMockup() {
+  const mockDocs = [
+    {
+      id: 1,
+      title: "State Farm Auto Policy",
+      memberName: "Maya Patel",
+      issuingAuthority: "State Farm",
+      documentNumber: "SF-8492-AX",
+      dueDate: "Aug 18, 2026",
+      source: "uploaded",
+      iconType: "arc" as const,
+      iconColor: "#10b981",
+    },
+    {
+      id: 2,
+      title: "Driving License",
+      memberName: "Maya Patel",
+      issuingAuthority: "Govt of India",
+      documentNumber: "MH-01-2023-XXXX",
+      dueDate: "Jan 10, 2033",
+      source: "digilocker",
+      iconType: "stripes" as const,
+      iconColor: "#3b82f6",
+    },
+    {
+      id: 3,
+      title: "Home Warranty",
+      memberName: "Arun Patel",
+      issuingAuthority: "HomeGuard",
+      documentNumber: "HW-9921",
+      dueDate: "Dec 4, 2026",
+      source: "uploaded",
+      iconType: "dots" as const,
+      iconColor: "#f59e0b",
+    },
+  ];
+
   return (
-    <div className="relative mx-auto w-full max-w-5xl animate-fade-in">
-      <div className="absolute left-1/2 top-7 h-20 w-20 -translate-x-1/2 rounded-full bg-brand/20 blur-2xl" />
-      <div className="relative overflow-hidden rounded-[2rem] border border-border/80 bg-background/85 shadow-dashboard backdrop-blur-xl">
-        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-b border-border/70 bg-surface/80 px-4 py-4 sm:px-6">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="grid size-10 shrink-0 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-brand">
-              <Folder className="size-5" aria-hidden="true" />
-            </div>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-extrabold text-foreground">Family Vault</p>
-              <p className="truncate text-xs font-semibold text-muted-foreground">32 documents organized</p>
-            </div>
-          </div>
-          <div className="hidden items-center gap-2 rounded-full border border-border bg-background px-3 py-2 text-xs font-bold text-muted-foreground sm:flex">
-            <span className="size-2 rounded-full bg-docket-mint" />
-            Live sync
-          </div>
-        </div>
+    <div className="relative mx-auto w-full max-w-5xl h-[40rem] animate-fade-in overflow-hidden rounded-[2rem] border border-black/10 bg-[#f3f4f7] flex shadow-[0_0_50px_-12px_rgba(0,0,0,0.3)]">
+      {/* Sidebar */}
+      <div className="hidden md:block shrink-0 h-full w-[72px] pointer-events-none">
+        <DashboardSidebar 
+          activeTab="dashboard" 
+          onSelectTab={() => {}} 
+          onOpenAddMember={() => {}} 
+          isCollapsed={true}
+        />
+      </div>
 
-        <div className="grid gap-5 p-4 sm:p-6 lg:grid-cols-[15rem_minmax(0,1fr)]">
-          <aside className="hidden rounded-3xl border border-border bg-surface/70 p-4 lg:block">
-            <p className="mb-4 text-xs font-extrabold uppercase text-muted-foreground">Categories</p>
-            <div className="space-y-2">
-              {categories.map((category, index) => (
-                <div
-                  key={category}
-                  className={cn(
-                    "flex items-center justify-between rounded-2xl px-3 py-3 text-sm font-bold",
-                    index === 0 ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground",
-                  )}
-                >
-                  <span>{category}</span>
-                  <span className="rounded-full bg-surface/35 px-2 py-0.5 text-xs">{index + 4}</span>
-                </div>
-              ))}
+      {/* Main Canvas */}
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative">
+        {/* Header */}
+        <header className="sticky top-0 z-20 px-5 pt-4 pb-3 border-b border-zinc-200/80 bg-white/80 backdrop-blur-lg flex items-center justify-between">
+          <div className="flex items-center gap-3">
+             <div>
+                <h2 className="text-xl font-black tracking-tight text-zinc-900">
+                  Good afternoon, Maya 👋
+                </h2>
+                <p className="text-[11px] text-zinc-500 font-medium mt-0.5">
+                  Here's the latest from your secure family vault.
+                </p>
+             </div>
+          </div>
+          <div className="flex items-center gap-2.5">
+             <div className="relative hidden lg:block w-64">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-zinc-400 pointer-events-none" />
+                <input
+                  type="text"
+                  placeholder="Search documents, members..."
+                  className="h-10 w-full rounded-full bg-white border border-zinc-200/80 pl-10 pr-12 text-xs font-medium text-zinc-800 placeholder:text-zinc-400 shadow-xs focus:outline-none"
+                  readOnly
+                />
+             </div>
+             <div className="size-10 rounded-full bg-white border border-zinc-200/80 grid place-items-center text-zinc-700 shadow-xs">
+                <Bell className="size-4" />
+             </div>
+             <div className="size-9.5 rounded-full overflow-hidden border border-zinc-200 bg-amber-100 grid place-items-center text-sm font-bold shadow-xs">
+               <span>👨🏻‍💻</span>
+             </div>
+          </div>
+        </header>
+        
+        <main className="flex-1 px-5 py-6 space-y-6 overflow-y-auto">
+          {/* Title & Actions */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-black tracking-tight text-zinc-900">
+                Family Document Vault
+              </h1>
+              <p className="text-xs text-zinc-500 font-medium mt-1">
+                Organize, verify, and track expiry dates for your entire family.
+              </p>
             </div>
-          </aside>
-
-          <div className="min-w-0">
-            <div className="mb-4 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4">
-              <div className="min-w-0">
-                <p className="truncate text-xl font-black text-foreground">Documents</p>
-                <p className="truncate text-sm font-medium text-muted-foreground">Sorted by what needs attention</p>
-              </div>
-              <div className="rounded-full bg-brand-soft px-3 py-2 text-xs font-black text-brand">
-                4 alerts
-              </div>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {documents.map((document) => {
-                const Icon = document.icon;
-                return (
-                  <article
-                    key={document.title}
-                    className="group rounded-3xl border border-border bg-background p-4 shadow-soft transition-transform duration-300 hover:-translate-y-1"
-                  >
-                    <div className="grid grid-cols-[auto_minmax(0,1fr)] gap-3">
-                      <span className={cn("grid size-11 shrink-0 place-items-center rounded-2xl", document.tone)}>
-                        <Icon className="size-5" aria-hidden="true" />
-                      </span>
-                      <div className="min-w-0">
-                        <h3 className="truncate text-sm font-extrabold text-foreground">{document.title}</h3>
-                        <p className="truncate text-xs font-semibold text-muted-foreground">{document.detail}</p>
-                      </div>
-                    </div>
-                    <div className="mt-5 flex items-center justify-between gap-3">
-                      <span className="text-xs font-bold text-muted-foreground">{document.date}</span>
-                      <span className="rounded-full border border-border bg-surface px-2.5 py-1 text-xs font-black text-brand">
-                        Vaulted
-                      </span>
-                    </div>
-                  </article>
-                );
-              })}
+            <div className="flex items-center gap-2.5">
+               <button className="h-10 rounded-full bg-docket-blue text-white text-xs font-bold px-5 flex items-center gap-1.5 shadow-xs cursor-default">
+                 <Plus className="size-4" />
+                 <span>Add Family Member</span>
+               </button>
             </div>
           </div>
-        </div>
+
+          {/* Cards */}
+          <div className="grid grid-cols-4 gap-4">
+             {/* Card 1 */}
+             <div className="rounded-3xl bg-docket-blue text-white p-5 flex flex-col justify-between shadow-xs min-h-[145px]">
+               <div className="flex justify-between items-center">
+                 <span className="text-xs font-medium text-white/90">Total Documents</span>
+                 <div className="grid size-8 place-items-center rounded-full bg-white text-zinc-900 shadow-xs">
+                   <ArrowUpRight className="size-4 stroke-[2.5]" />
+                 </div>
+               </div>
+               <div>
+                 <h3 className="text-4xl font-extrabold tracking-tight">32</h3>
+                 <div className="mt-2 text-[10px] font-semibold text-emerald-200">Confirmed and searchable</div>
+               </div>
+             </div>
+             {/* Card 2 */}
+             <div className="rounded-3xl bg-white border border-black/[0.06] p-5 flex flex-col justify-between shadow-xs min-h-[145px]">
+               <div className="flex justify-between items-center">
+                 <span className="text-xs font-medium text-zinc-700">DigiLocker Synced</span>
+                 <div className="grid size-8 place-items-center rounded-full border border-zinc-200 bg-white text-zinc-800 shadow-xs">
+                   <ArrowUpRight className="size-4 stroke-[2.5]" />
+                 </div>
+               </div>
+               <div>
+                 <h3 className="text-4xl font-extrabold tracking-tight text-zinc-900">12</h3>
+                 <div className="mt-2 text-[10px] font-semibold text-zinc-500">Imported straight from the issuer</div>
+               </div>
+             </div>
+             {/* Card 3 */}
+             <div className="rounded-3xl bg-white border border-black/[0.06] p-5 flex flex-col justify-between shadow-xs min-h-[145px]">
+               <div className="flex justify-between items-center">
+                 <span className="text-xs font-medium text-zinc-700">Active Policies</span>
+                 <div className="grid size-8 place-items-center rounded-full border border-zinc-200 bg-white text-zinc-800 shadow-xs">
+                   <ArrowUpRight className="size-4 stroke-[2.5]" />
+                 </div>
+               </div>
+               <div>
+                 <h3 className="text-4xl font-extrabold tracking-tight text-zinc-900">8</h3>
+                 <div className="mt-2 text-[10px] font-semibold text-zinc-500">Health and insurance cover</div>
+               </div>
+             </div>
+             {/* Card 4 */}
+             <div className="rounded-3xl bg-white border border-black/[0.06] p-5 flex flex-col justify-between shadow-xs min-h-[145px]">
+               <div className="flex justify-between items-center">
+                 <span className="text-xs font-medium text-zinc-700">Expiring Soon</span>
+                 <div className="grid size-8 place-items-center rounded-full border border-zinc-200 bg-white text-zinc-800 shadow-xs">
+                   <ArrowUpRight className="size-4 stroke-[2.5]" />
+                 </div>
+               </div>
+               <div>
+                 <h3 className="text-4xl font-extrabold tracking-tight text-zinc-900">2</h3>
+                 <div className="mt-2 text-[10px] font-semibold text-amber-600">Passport (42d) • Car Policy (11d)</div>
+               </div>
+             </div>
+          </div>
+
+          {/* Recent Documents List */}
+          <div className="pt-2 space-y-3">
+             <h2 className="text-sm font-black text-zinc-900">Recent Documents</h2>
+             <div className="rounded-3xl border border-black/[0.06] bg-white overflow-hidden shadow-xs divide-y divide-zinc-100">
+               {mockDocs.map((doc) => (
+                 <div
+                   key={doc.id}
+                   className="flex items-center justify-between p-4 hover:bg-zinc-50/80 transition-colors cursor-default gap-4 group"
+                 >
+                   <div className="flex items-center gap-3.5 min-w-0">
+                     <div className="grid size-10 place-items-center rounded-xl bg-zinc-50 border border-zinc-200/70 shrink-0">
+                       <GeometricDocIcon type={doc.iconType} color={doc.iconColor} />
+                     </div>
+                     <div className="min-w-0">
+                       <h3 className="text-xs font-bold text-zinc-900 transition-colors truncate">
+                         {doc.title}
+                       </h3>
+                       <p className="text-[11px] text-zinc-400 truncate mt-0.5">
+                         {doc.memberName} • {doc.issuingAuthority} •{" "}
+                         <span className="font-mono">{doc.documentNumber}</span>
+                       </p>
+                     </div>
+                   </div>
+
+                   <div className="flex items-center gap-3 shrink-0">
+                     <span className="text-[11px] font-medium text-zinc-500 hidden sm:inline">
+                       {doc.dueDate}
+                     </span>
+                     <span
+                       className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
+                         doc.source === "digilocker"
+                           ? "bg-blue-50 border border-blue-200 text-docket-blue"
+                           : "bg-zinc-100 text-zinc-700"
+                       }`}
+                     >
+                       {doc.source === "digilocker" ? "DigiLocker" : "Uploaded"}
+                     </span>
+                     <ArrowUpRight className="size-4 text-zinc-300 transition-all" />
+                   </div>
+                 </div>
+               ))}
+             </div>
+          </div>
+        </main>
       </div>
     </div>
   );

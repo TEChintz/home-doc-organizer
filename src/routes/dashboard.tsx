@@ -323,7 +323,13 @@ function DashboardPage({ data }: { data: DashboardData }) {
                   type="text"
                   placeholder="Search documents, members..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setSearchQuery(val);
+                    if (val && activeTab !== "tasks" && activeTab !== "team") {
+                      setActiveTab("tasks");
+                    }
+                  }}
                   className="h-10 w-full rounded-full bg-white border border-zinc-200/80 pl-10 pr-12 text-xs font-medium text-zinc-800 placeholder:text-zinc-400 shadow-xs focus:outline-none focus:ring-1 focus:ring-docket-blue"
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md bg-zinc-100 px-1.5 py-0.5 text-[10px] font-bold text-zinc-400">
@@ -373,7 +379,13 @@ function DashboardPage({ data }: { data: DashboardData }) {
               type="text"
               placeholder="Search documents, members..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                setSearchQuery(val);
+                if (val && activeTab !== "tasks" && activeTab !== "team") {
+                  setActiveTab("tasks");
+                }
+              }}
               className="h-10 w-full rounded-full bg-zinc-100 border-none pl-10 pr-4 text-xs font-medium text-zinc-800 placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-docket-blue"
             />
           </div>
