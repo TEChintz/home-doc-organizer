@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import QRCode from "qrcode";
 import { Copy, Loader2, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,32 @@ export function WhatsAppView() {
   const [code, setCode] = useState<string | null>(null);
   const [expiresAt, setExpiresAt] = useState<number | null>(null);
   const [secondsLeft, setSecondsLeft] = useState(0);
+  const [qr, setQr] = useState<string | null>(null);
+
+  /**
+   * Scanning this opens WhatsApp with "LINK <code>" already typed, which saves
+   * the user copying a 6-digit code across devices. Rendered locally rather
+   * than via a QR web service, so the code never leaves the browser.
+   */
+  useEffect(() => {
+    if (!code) {
+      setQr(null);
+      return;
+    }
+    const digits = BOT_NUMBER.replace(/[^\d]/g, "");
+    const deepLink = `https://wa.me/${digits}?text=${encodeURIComponent(`LINK ${code}`)}`;
+    let cancelled = false;
+    QRCode.toDataURL(deepLink, { width: 220, margin: 1 })
+      .then((url) => {
+        if (!cancelled) setQr(url);
+      })
+      .catch(() => {
+        if (!cancelled) setQr(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [code]);
 
   useEffect(() => {
     if (!expiresAt) return;
@@ -85,6 +112,25 @@ export function WhatsAppView() {
                   : `Expires in ${Math.floor(secondsLeft / 60)}:${String(secondsLeft % 60).padStart(2, "0")}`}
               </p>
             </div>
+
+            {qr && (
+              <div className="flex flex-col items-center gap-2">
+                <img
+                  src={qr}
+                  alt={`QR code to message ${BOT_NUMBER} with your linking code`}
+                  className="rounded-lg border border-zinc-200 bg-white p-2"
+                  width={160}
+                  height={160}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Scan on your phone — it opens WhatsApp with the code filled in.
+                </p>
+              </div>
+            )}
+
+            <p className="text-center text-xs font-medium text-muted-foreground">
+              or do it by hand
+            </p>
 
             <ol className="space-y-3 text-sm">
               <Step n={1}>
