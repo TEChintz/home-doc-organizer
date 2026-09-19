@@ -54,7 +54,7 @@ export function WhatsAppView() {
         </p>
       </header>
 
-      <div className="rounded-xl border border-border bg-card p-6">
+      <div className="rounded-xl border border-border bg-white p-6">
         {!code ? (
           <Button className="w-full" onClick={generate} disabled={createCode.isPending}>
             {createCode.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

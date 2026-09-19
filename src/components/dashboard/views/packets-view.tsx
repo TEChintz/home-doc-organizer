@@ -155,7 +155,7 @@ export function PacketsView({
       )}
 
       {result && (
-        <section className="rounded-xl border border-border bg-card p-5">
+        <section className="rounded-xl border border-border bg-white p-5">
           <div className="flex items-baseline justify-between">
             <h3 className="font-medium">
               {TEMPLATE_LABELS[result.template] ?? result.template.replace(/_/g, " ")}
