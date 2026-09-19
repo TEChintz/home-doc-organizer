@@ -64,7 +64,7 @@ export function AlertsView({ memberNames }: { memberNames: Map<string, string> }
               <li
                 key={alert.id}
                 className={`flex items-start gap-3 rounded-xl border p-4 ${
-                  high ? "border-red-200 bg-red-50" : "border-border bg-card"
+                  high ? "border-red-200 bg-red-50" : "border-border bg-white"
                 }`}
               >
                 {high ? (
