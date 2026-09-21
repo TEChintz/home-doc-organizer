@@ -73,45 +73,45 @@
 :root {
   --font-docket: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
   --radius: 0.875rem;
-  
+
   /* Minimalist Monochromatic Theme with Vibrant Blue Accent */
   --background: oklch(0.98 0 0); /* Off-white main background */
-  --foreground: oklch(0.1 0 0);  /* Near black text */
-  
+  --foreground: oklch(0.1 0 0); /* Near black text */
+
   /* Black Cards (User request) */
   --card: oklch(0.1 0 0);
   --card-foreground: oklch(0.98 0 0);
-  
+
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.1 0 0);
-  
+
   /* The single Accent Color (Vibrant Electric Blue) */
   --primary: oklch(0.55 0.25 260);
   --primary-foreground: oklch(1 0 0);
-  
+
   --secondary: oklch(0.95 0 0);
   --secondary-foreground: oklch(0.1 0 0);
-  
+
   --muted: oklch(0.95 0 0);
   --muted-foreground: oklch(0.4 0 0);
-  
+
   --accent: oklch(0.95 0 0);
   --accent-foreground: oklch(0.1 0 0);
-  
+
   --destructive: oklch(0.6 0.2 25);
   --destructive-foreground: oklch(1 0 0);
-  
+
   --border: oklch(0.9 0 0);
   --input: oklch(0.9 0 0);
   --ring: oklch(0.55 0.25 260);
-  
+
   --surface: oklch(1 0 0);
-  
+
   --brand: oklch(0.55 0.25 260);
   --brand-foreground: oklch(1 0 0);
   --brand-soft: oklch(0.95 0.05 260);
   --brand-bright: oklch(0.65 0.25 260);
-  
+
   /* Convert previous colorful accents to monochrome or primary */
   --docket-blue: oklch(0.55 0.25 260);
   --docket-blue-foreground: oklch(1 0 0);
@@ -123,7 +123,7 @@
   --docket-lilac-foreground: oklch(0.1 0 0);
   --docket-red: oklch(0.6 0.2 25);
   --docket-red-soft: oklch(0.95 0 0);
-  
+
   /* Security / Other */
   --security: oklch(0.1 0 0);
   --security-foreground: oklch(1 0 0);
@@ -133,14 +133,14 @@
   --security-metal: oklch(0.5 0 0);
   --security-highlight: oklch(0.9 0 0 / 80%);
   --security-glow: oklch(0.55 0.25 260 / 42%);
-  
+
   /* Charts - use monochromatic shades of blue and gray */
   --chart-1: oklch(0.55 0.25 260);
   --chart-2: oklch(0.7 0.15 260);
   --chart-3: oklch(0.3 0.1 260);
   --chart-4: oklch(0.2 0 0);
   --chart-5: oklch(0.5 0 0);
-  
+
   /* Sidebar matching cards */
   --sidebar: oklch(0.1 0 0);
   --sidebar-foreground: oklch(0.98 0 0);
@@ -150,30 +150,65 @@
   --sidebar-accent-foreground: oklch(0.98 0 0);
   --sidebar-border: oklch(0.2 0 0);
   --sidebar-ring: oklch(0.55 0.25 260);
-  
+
   --shadow-soft: 0 18px 45px -28px color-mix(in oklab, oklch(0.1 0 0) 28%, transparent);
-  --shadow-glass: 0 18px 60px -38px color-mix(in oklab, var(--brand) 32%, transparent), inset 0 1px 0 color-mix(in oklab, var(--background) 82%, transparent);
+  --shadow-glass:
+    0 18px 60px -38px color-mix(in oklab, var(--brand) 32%, transparent),
+    inset 0 1px 0 color-mix(in oklab, var(--background) 82%, transparent);
   --shadow-brand: 0 14px 28px -16px color-mix(in oklab, var(--brand) 65%, transparent);
   --shadow-dashboard: 0 32px 95px -52px color-mix(in oklab, oklch(0.1 0 0) 45%, transparent);
-  --shadow-metal: 0 28px 70px -30px color-mix(in oklab, oklch(0.1 0 0) 45%, transparent), inset 0 1px 0 color-mix(in oklab, oklch(1 0 0) 40%, transparent);
+  --shadow-metal:
+    0 28px 70px -30px color-mix(in oklab, oklch(0.1 0 0) 45%, transparent),
+    inset 0 1px 0 color-mix(in oklab, oklch(1 0 0) 40%, transparent);
 }
 
 @utility bg-grid-fade {
   background:
-    radial-gradient(circle at 20% 12%, color-mix(in oklab, var(--brand) 10%, transparent), transparent 30%),
-    radial-gradient(circle at 80% 22%, color-mix(in oklab, var(--docket-mint) 34%, transparent), transparent 30%),
+    radial-gradient(
+      circle at 20% 12%,
+      color-mix(in oklab, var(--brand) 10%, transparent),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 80% 22%,
+      color-mix(in oklab, var(--docket-mint) 34%, transparent),
+      transparent 30%
+    ),
     linear-gradient(color-mix(in oklab, var(--border) 48%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in oklab, var(--border) 48%, transparent) 1px, transparent 1px),
+    linear-gradient(
+      90deg,
+      color-mix(in oklab, var(--border) 48%, transparent) 1px,
+      transparent 1px
+    ),
     var(--background);
-  background-size: auto, auto, 7rem 7rem, 7rem 7rem, auto;
+  background-size:
+    auto,
+    auto,
+    7rem 7rem,
+    7rem 7rem,
+    auto;
 }
 
 @utility bg-security-grid {
   background:
-    radial-gradient(circle at 70% 20%, color-mix(in oklab, var(--brand) 20%, transparent), transparent 28%),
-    linear-gradient(color-mix(in oklab, var(--security-line) 38%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in oklab, var(--security-line) 38%, transparent) 1px, transparent 1px);
-  background-size: auto, 6rem 6rem, 6rem 6rem;
+    radial-gradient(
+      circle at 70% 20%,
+      color-mix(in oklab, var(--brand) 20%, transparent),
+      transparent 28%
+    ),
+    linear-gradient(
+      color-mix(in oklab, var(--security-line) 38%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      color-mix(in oklab, var(--security-line) 38%, transparent) 1px,
+      transparent 1px
+    );
+  background-size:
+    auto,
+    6rem 6rem,
+    6rem 6rem;
 }
 
 @utility shadow-soft {
@@ -226,11 +261,13 @@
 }
 
 @keyframes scan-document {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(-1rem);
     opacity: 0;
   }
-  10%, 90% {
+  10%,
+  90% {
     opacity: 1;
   }
   50% {
@@ -239,10 +276,12 @@
 }
 
 @keyframes lock-snap {
-  0%, 30% {
+  0%,
+  30% {
     transform: translateY(-1.25rem);
   }
-  46%, 100% {
+  46%,
+  100% {
     transform: translateY(0);
   }
 }
@@ -264,6 +303,6 @@
 }
 /* Hide scrollbar for IE, Edge and Firefox */
 .scrollbar-hide {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }

@@ -61,9 +61,12 @@ export function AskView({ onOpenDocument }: { onOpenDocument?: (documentId: stri
               <div className="mb-6 grid size-12 place-items-center rounded-2xl bg-white text-docket-blue border border-zinc-200/60 shadow-sm">
                 <DocketLogo className="size-6" />
               </div>
-              <h2 className="text-2xl font-semibold tracking-tight text-zinc-900">How can I help you today?</h2>
+              <h2 className="text-2xl font-semibold tracking-tight text-zinc-900">
+                How can I help you today?
+              </h2>
               <p className="mt-2.5 text-sm text-zinc-500 max-w-sm mb-12">
-                Ask questions about your uploaded documents, and I'll find the answers for you instantly.
+                Ask questions about your uploaded documents, and I'll find the answers for you
+                instantly.
               </p>
 
               <div className="flex flex-col gap-3 w-full max-w-lg mx-auto">
@@ -85,7 +88,10 @@ export function AskView({ onOpenDocument }: { onOpenDocument?: (documentId: stri
           )}
 
           {turns.map((turn, i) => (
-            <div key={i} className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div
+              key={i}
+              className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300"
+            >
               {/* User Message */}
               <div className="flex justify-end w-full">
                 <div className="max-w-[85%] sm:max-w-[75%] rounded-3xl rounded-tr-md bg-zinc-200/70 px-5 py-3.5 text-[15px] leading-relaxed text-zinc-900">
@@ -104,7 +110,7 @@ export function AskView({ onOpenDocument }: { onOpenDocument?: (documentId: stri
                   <div className="text-[15px] leading-relaxed text-zinc-800 pt-1">
                     <p className="whitespace-pre-wrap">{turn.answer}</p>
                   </div>
-                  
+
                   {turn.citations.length > 0 && (
                     <div className="flex flex-wrap gap-2 pt-1">
                       {turn.citations.map((c) => (
@@ -138,13 +144,13 @@ export function AskView({ onOpenDocument }: { onOpenDocument?: (documentId: stri
               </div>
             </div>
           )}
-          
+
           {error && (
             <div className="mx-auto w-fit rounded-xl bg-red-50 px-4 py-2 text-sm font-medium text-red-600 border border-red-100">
               {error}
             </div>
           )}
-          
+
           <div ref={endRef} className="h-4" />
         </div>
       </div>
@@ -163,7 +169,7 @@ export function AskView({ onOpenDocument }: { onOpenDocument?: (documentId: stri
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
+                if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
                   void submit(question);
                 }
@@ -173,8 +179,8 @@ export function AskView({ onOpenDocument }: { onOpenDocument?: (documentId: stri
               rows={1}
               className="flex-1 max-h-32 min-h-[44px] resize-none bg-transparent py-3 pl-4 text-[15px] outline-none placeholder:text-zinc-500 disabled:opacity-50"
             />
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={ask.isPending || !question.trim()}
               className="grid size-11 place-items-center rounded-xl bg-zinc-900 text-white shadow-sm transition-all hover:bg-zinc-800 disabled:opacity-50 disabled:hover:bg-zinc-900 cursor-pointer shrink-0 mb-0.5 mr-0.5"
             >

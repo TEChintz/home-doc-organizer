@@ -56,9 +56,7 @@ export function DashboardSidebar({
     { id: "team", label: "Family Team", icon: Users2 },
   ];
 
-  const generalItems = [
-    { id: "logout", label: "Logout", icon: LogOut },
-  ];
+  const generalItems = [{ id: "logout", label: "Logout", icon: LogOut }];
 
   const handleItemClick = (id: string) => {
     if (id === "logout") {
@@ -232,7 +230,6 @@ export function DashboardSidebar({
             </div>
           </div>
         </div>
-
       </aside>
     </TooltipProvider>
   );

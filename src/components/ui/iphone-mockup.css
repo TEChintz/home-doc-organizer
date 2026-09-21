@@ -1,0 +1,371 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+:root {
+  --size: 8px; /* Base size for em units */
+  --height: 80em;
+  --pad: 1.25em;
+  --border-radius: 6.666em;
+  --gutter: calc(var(--pad) * 2);
+  
+  --button-width: 0.333em;
+  
+  --notch-height: 3.33em;
+  --notch-width: 33.3%;
+  --notch-radius: calc(var(--border-radius) - calc(var(--pad) * 2));
+  --notch-duration: 0.333s;
+  
+  --ease: cubic-bezier(.666, 0, .4, 1);
+  --ease-spring: cubic-bezier(.666, 0, .4, 1.2);
+  --ease-out: cubic-bezier(.15,0,.333,1);
+  
+  --border-width: 0.4em;
+  
+  /* Space Black Theme Colors */
+  --c-h: 215;
+  --c-s: 10%;
+  --c-l: 50%;
+}
+
+@keyframes appear {
+  to {
+    transform: scale3d(1,1,1);
+    opacity: 1;
+  }
+}
+
+.ip-scene {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: 'Inter', sans-serif;
+  font-size: var(--size);
+  box-sizing: border-box;
+}
+
+.ip-phone {
+  position: relative;
+  z-index: 1;
+  
+  aspect-ratio: 37/76;
+  background: black;
+  height: var(--height);
+  border-radius: var(--border-radius);
+  box-shadow: 0 0 0.1em 0.25em hsl(var(--c-h), 20%, 25%), 0 0 0 var(--border-width) hsl(var(--c-h), 30%, 85%);
+  box-sizing: border-box;
+  
+  opacity: 0;
+  transform: scale3d(1.1,1.1,1);
+  animation: appear 1s var(--ease-out) forwards;
+  -webkit-backface-visibility: hidden;
+}
+
+.ip-phone:before {
+  content: '';
+  position: absolute;
+  top: var(--border-radius);
+  right: calc(var(--border-width) * -1);
+  bottom: var(--border-radius);
+  left: calc(var(--border-width) * -1);
+  border: 0.5em solid hsl(var(--c-h), 20%, 30%);
+  border-left-width: 0;
+  border-right-width: 0;
+}
+
+.ip-buttons {
+  position: absolute;
+  inset: calc(var(--border-width) * -1);
+  pointer-events: none;
+}
+
+.ip-buttons .ip-left,
+.ip-buttons .ip-right {
+  position: absolute;
+  width: var(--button-width);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 1.5em;
+}
+
+.ip-buttons .ip-left {
+  right: 100%;
+  top: calc(var(--border-radius) * 2);
+}
+
+.ip-buttons .ip-left .ip-button:nth-child(1) {
+  height: 3em;
+  margin-bottom: 0.5em;
+}
+
+.ip-buttons .ip-right {
+  left: 100%;
+  transform: scale3d(-1, 1, 1);
+  top: calc(var(--border-radius) * 3);
+}
+
+.ip-buttons .ip-right .ip-button {
+  height: 9.5em;
+}
+
+.ip-button {
+  background: hsl(var(--c-h), 20%, 95%);
+  height: 6em;
+  box-shadow:
+    inset -0.15em 0 0.1em black, 
+    inset 0 0 0.1em hsl(var(--c-h), 30%, 90%),
+    inset 0 0.2em 0.1em hsl(var(--c-h), 30%, 90%),
+    inset 0 -0.2em 0.1em hsl(var(--c-h), 30%, 90%),
+    inset -0.1em 0.333em 0.1em rgba(0,0,0, 0.5), 
+    inset -0.1em -0.333em 0.1em rgba(0,0,0, 0.5);
+  border-top-left-radius: 0.2em;
+  border-bottom-left-radius: 0.2em;
+}
+
+.ip-screen-container {
+  position: absolute;
+  inset: 0;
+  
+  border-radius: var(--border-radius);
+  border: var(--pad) solid black;
+  
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--pad) * 2);
+}
+
+/* Home Indicator (Bottom thingy) */
+.ip-screen-container:before {
+  content: '';
+  position: absolute;
+  z-index: 2;
+  background: black;
+  width: 36.6%;
+  bottom: calc(var(--pad) * 0.75);
+  height: calc(var(--pad) * 0.5);
+  border-radius: calc(var(--pad) * 0.25);
+  filter: drop-shadow(0 0.1em 0.25em rgba(255,255,255, 0.5));
+}
+
+.ip-bg {
+  position: absolute;
+  inset: 0;
+  background: #EBE4DB; /* WhatsApp chat background */
+  border-radius: calc(var(--border-radius) - var(--pad));
+  overflow: hidden;
+  transform: translateZ(0);
+}
+
+.ip-notch-container {
+  position: absolute;
+  z-index: 3;
+  top: var(--pad);
+  right: var(--pad);
+  left: var(--pad);
+  display: flex;
+  justify-content: center;
+  
+  height: 100%;
+  max-height: calc(var(--notch-radius) * 2);
+  
+  pointer-events: none;
+  outline: none;
+    
+  transition: var(--notch-duration) var(--ease);
+  transition-property: max-height, max-width, filter, transform;
+  will-change: max-width, max-height, filter;
+}
+
+.ip-notch-container:hover,
+.ip-notch-container:focus-within {
+  --shadow-opacity: 0.5;
+  transition-timing-function: var(--ease-spring);
+}
+
+.ip-notch-container:hover .ip-content,
+.ip-notch-container:focus-within .ip-content {
+  --content-padding: 2em;
+}
+
+.ip-notch-container:hover .ip-text,
+.ip-notch-container:focus-within .ip-text {
+  opacity: 1;
+}
+
+.ip-notch-container:hover .ip-notch,
+.ip-notch-container:focus-within .ip-notch {
+  max-width: 100%;
+  max-height: 100%;
+  pointer-events: all;
+  transform: scale3d(1,1,1);
+}
+
+.ip-notch-container:hover ~ .ip-notch-blur,
+.ip-notch-container:focus-within ~ .ip-notch-blur {
+  opacity: 1;
+  max-height: calc(var(--notch-radius) * 3.333 + var(--pad));
+}
+
+.ip-notch-blur {
+  position: absolute;
+  z-index: 2;
+  top: calc(var(--pad) - 3px);
+  right: calc(var(--pad) - 3px);
+  left: calc(var(--pad) - 3px);
+  height: 100%;
+  max-height: calc(var(--notch-radius) * 1.5);
+  backdrop-filter: blur(0.2em);
+  mask-image: linear-gradient(to bottom, black 60%, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent);
+  opacity: 0;
+  border-radius: calc(var(--border-radius) - var(--pad));
+  transition: var(--notch-duration) var(--ease);
+  transition-property: max-height, max-width, opacity, transform;
+  will-change: max-width, max-height;
+}
+
+.ip-notch {
+  position: relative;
+  border-radius: var(--notch-radius);
+  pointer-events: all;
+  overflow: hidden;
+  color: white;
+  display: flex;
+  cursor: pointer;
+  width: 100%;
+  
+  transition: inherit;
+  transition-property: inherit;
+  will-change: inherit;
+  
+  filter: drop-shadow(0 1em 2em rgba(0, 0, 0, var(--shadow-opacity, 0)));
+  
+  transform: scale3d(0.375,0.4,1);
+  transform-origin: top;
+}
+
+.ip-notch:before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: black;
+  border-radius: inherit;
+}
+
+.ip-content {
+  --content-padding: 1.75em;
+  --duration-height: 0.5em;
+  --content-gap: 1em;
+  
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  justify-content: stretch;
+  padding: var(--content-padding);
+  gap: var(--content-gap);
+  font-size: 125%;
+  
+  transition-property: padding;
+  will-change: padding;
+  position: relative;
+}
+
+.ip-content .ip-left,
+.ip-content .ip-right {
+  height: 100%;
+  max-height: calc(100% - var(--bar-height, 0%));
+  display: flex;
+  align-items: center;
+  gap: 1em;
+}
+
+.ip-content, .ip-content .ip-left, .ip-content .ip-right, .ip-content .ip-bar, .ip-content .ip-text {
+  transition: var(--notch-duration) var(--ease-out);
+}
+
+.ip-content .ip-left, .ip-content .ip-right, .ip-content .ip-bar {
+  transition-property: max-height, opacity;
+  will-change: max-height;
+}
+
+.ip-content .ip-left {
+  flex-grow: 2;
+}
+
+.ip-content .ip-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.333em;
+  transition-property: opacity;
+  opacity: 0;
+}
+
+.ip-content .ip-text:before {
+  content: 'Secure Vault';
+  order: 1;
+  text-transform: uppercase;
+  font-size: 0.7em;
+  letter-spacing: 0.05em;
+  opacity: 0.7;
+}
+
+.ip-content .ip-text:after {
+  order: 2;
+  content: 'Processing Document...';
+  font-size: 0.9em;
+  opacity: 0.9;
+}
+
+.ip-content .ip-right {
+  flex-grow: 1;
+}
+
+.ip-content .ip-tile {
+  background: #2a2a2a;
+  height: 100%;
+  aspect-ratio: 1;
+  border-radius: 33.3%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ip-camera {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: var(--notch-height);
+  aspect-ratio: 1/1;
+  border-radius: 50%;
+  pointer-events: none;
+  
+  position: absolute;
+  z-index: 4;
+  top: calc(var(--pad) * 2);
+  right: calc(50% - calc(var(--notch-width) * 0.5));
+  margin-right: calc(var(--pad) * 0.333);
+}
+
+.ip-camera:before {
+  content: "";
+  height: 33.3%;
+  aspect-ratio: 1;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0.25em #4c4da3;
+  background: #080928;
+}
+
+.ip-screen {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  border-radius: calc(var(--border-radius) - var(--pad));
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}

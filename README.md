@@ -14,9 +14,6 @@ Hero Section
 
 Dark or muted premium background. Heavy emphasis on the central visual.
 
-
-
-
 Headline: Your family's life. Organized.
 
 Subtext: Insurance, warranties, medical reports, and vehicle papers in one secure vault.
@@ -29,9 +26,6 @@ Section 1: The Magic (Auto-Extraction)
 
 Scroll-triggered animation. Bento-box style layout.
 
-
-
-
 Visual: Split screen. On the left, a raw, cluttered PDF of an insurance policy. As the user scrolls, a glowing line scans it, and the right side reveals a clean UI card with crisp extracted metadata (Issuer: State Farm, Type: Auto Policy).
 
 Headline: Drop it in. We do the reading.
@@ -41,9 +35,6 @@ Subtext: Upload any document. The vault instantly extracts the issuer, title, an
 Section 2: The Utility (Expiry Tracking)
 
 Lots of whitespace. Centered alignment.
-
-
-
 
 Visual: A stark, beautiful UI widget showing a timeline. A red indicator highlights an upcoming date: "Vehicle Registration - Expires in 14 Days."
 
@@ -55,9 +46,6 @@ Section 3: The Network (Role-Based Access)
 
 Horizontal layout, alternating from Section 1.
 
-
-
-
 Visual: A floating, translucent glassmorphism panel showing a household roster. Three avatars with distinct tags: Owner, Adult, and Viewer.
 
 Headline: Shared with the house. Controlled by you.
@@ -68,9 +56,6 @@ Section 4: Privacy & Security (The Trust)
 
 Deep black background, high contrast. Apple's signature privacy aesthetic.
 
-
-
-
 Visual: A large, intricately rendered, metallic padlock icon that locks with a satisfying "snap" animation on scroll.
 
 Headline: Private by design.
@@ -80,9 +65,6 @@ Subtext: Sensitive identifiers are instantly locked and masked. Your family's da
 Bottom Call to Action
 
 Clean, expansive whitespace, bringing focus entirely to the center.
-
-
-
 
 Headline: Take control of the paperwork.
 
@@ -95,8 +77,6 @@ Footer
 Left: © 2026 Docket. All rights reserved.
 
 Right: Privacy Policy | Terms of Service'
-
-
 
 ## Development
 

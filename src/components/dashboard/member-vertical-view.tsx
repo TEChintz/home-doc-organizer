@@ -16,11 +16,7 @@ import {
   Eye,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type {
-  FamilyMember,
-  VaultDocument,
-  DocumentCategory,
-} from "./dashboard-types";
+import type { FamilyMember, VaultDocument, DocumentCategory } from "./dashboard-types";
 import { GeometricDocIcon } from "./geometric-doc-icon";
 
 interface MemberVerticalViewProps {
@@ -81,7 +77,9 @@ export function MemberVerticalView({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => alert(`Exporting ${member.name}'s encrypted vault as a password-protected bundle...`)}
+            onClick={() =>
+              alert(`Exporting ${member.name}'s encrypted vault as a password-protected bundle...`)
+            }
             className="rounded-full text-xs font-bold h-9 border-zinc-300 bg-white hover:bg-zinc-50 text-zinc-800 shadow-xs cursor-pointer gap-1.5"
           >
             <Download className="size-3.5 text-zinc-500" />
@@ -287,7 +285,8 @@ export function MemberVerticalView({
                       )}
                     </div>
                     <p className="text-[11px] text-zinc-400 truncate mt-0.5">
-                      {doc.issuingAuthority} • <span className="font-mono">{doc.documentNumber}</span>
+                      {doc.issuingAuthority} •{" "}
+                      <span className="font-mono">{doc.documentNumber}</span>
                     </p>
                   </div>
                 </div>
@@ -343,7 +342,8 @@ export function MemberVerticalView({
             <FileText className="mx-auto size-10 text-zinc-300 mb-2" />
             <p className="text-xs font-bold text-zinc-800">No documents in this category</p>
             <p className="text-[11px] text-zinc-400 mt-0.5">
-              Upload a document or connect DigiLocker to keep {member.name.split(" ")[0]}'s vault complete.
+              Upload a document or connect DigiLocker to keep {member.name.split(" ")[0]}'s vault
+              complete.
             </p>
             <Button
               size="sm"
