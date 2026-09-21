@@ -132,9 +132,9 @@ export function useUploadDocument() {
  */
 export function useProcessingDocuments() {
   return useQuery({
-    queryKey: qk.documents({ status: 'processing' }),
+    queryKey: qk.documents({ status: "processing" }),
     queryFn: () =>
-      apiFetch<{ documents: ApiDocument[] }>('/v1/documents?status=processing&limit=50').then(
+      apiFetch<{ documents: ApiDocument[] }>("/v1/documents?status=processing&limit=50").then(
         (r) => r.documents,
       ),
     refetchInterval: (query) => ((query.state.data?.length ?? 0) > 0 ? 3000 : false),

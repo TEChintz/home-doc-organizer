@@ -48,13 +48,15 @@ export function useDashboardData(): DashboardData {
 
   const memberNames = useMemo(() => memberNameMap(apiMembers), [apiMembers]);
 
-  // When the last in-flight document finishes being read, pull everything
-  // again: the document has just moved into the confirmation queue and may have
-  // changed the alert picture.
+  // Whenever an in-flight document finishes being read, pull everything again:
+  // it has just moved into the confirmation queue and may have changed the
+  // alert picture. Keyed on the count *falling* rather than reaching zero, so
+  // that with several uploads in flight the first to finish shows up straight
+  // away instead of waiting for the slowest one.
   const processingCount = processing.data?.length ?? 0;
   const wasProcessing = useRef(processingCount);
   useEffect(() => {
-    if (wasProcessing.current > 0 && processingCount === 0) {
+    if (processingCount < wasProcessing.current) {
       void qc.invalidateQueries({ queryKey: ["documents"] });
       void qc.invalidateQueries({ queryKey: ["alerts"] });
     }
