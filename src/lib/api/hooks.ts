@@ -122,6 +122,25 @@ export function useUploadDocument() {
   });
 }
 
+/**
+ * Documents being read right now.
+ *
+ * Extraction happens after the 202, so a freshly uploaded document is neither
+ * `confirmed` (not in the vault) nor `needs_confirmation` (not in the queue) —
+ * it is invisible until something refetches. This polls while anything is in
+ * flight so the UI notices the moment the server finishes.
+ */
+export function useProcessingDocuments() {
+  return useQuery({
+    queryKey: qk.documents({ status: 'processing' }),
+    queryFn: () =>
+      apiFetch<{ documents: ApiDocument[] }>('/v1/documents?status=processing&limit=50').then(
+        (r) => r.documents,
+      ),
+    refetchInterval: (query) => ((query.state.data?.length ?? 0) > 0 ? 3000 : false),
+  });
+}
+
 export function usePatchDocument() {
   const qc = useQueryClient();
   return useMutation({
