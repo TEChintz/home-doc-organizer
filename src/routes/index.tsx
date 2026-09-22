@@ -1036,7 +1036,8 @@ function PricingVisual() {
 
 function Index() {
   return (
-    <main className="min-h-screen overflow-hidden bg-background font-sans text-foreground">
+    <div className="relative font-sans text-foreground bg-surface overflow-x-clip">
+      <main className="relative z-10 isolate transform-gpu min-h-screen bg-background rounded-b-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] mb-[100vh]">
       <section className="relative min-h-screen overflow-hidden border-b border-border bg-grid-fade px-4 pb-20 pt-5 sm:px-6 lg:px-8 sm:pb-32">
         <div className="pointer-events-none absolute inset-6 rounded-[2rem] border border-border/70" />
         <div className="pointer-events-none absolute left-1/2 top-0 h-72 w-72 -translate-x-1/2 rounded-full bg-brand/10 blur-3xl" />
@@ -1308,12 +1309,13 @@ function Index() {
         </div>
         <PricingVisual />
       </motion.section>
+      </main>
 
-      <footer className="relative bg-surface overflow-hidden border-t border-border pt-16 pb-6 px-4 sm:px-6 lg:px-8">
+      <footer className="fixed bottom-0 left-0 w-full z-0 bg-surface overflow-hidden border-t border-border min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center justify-center w-full">
           <svg
-            className="w-[80%] h-auto"
-            viewBox="0 0 1000 250"
+            className="w-full h-auto"
+            viewBox="0 0 1100 250"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
           >
@@ -1323,19 +1325,16 @@ function Index() {
               dominantBaseline="middle"
               textAnchor="middle"
               className="font-black text-black"
-              fontSize="240"
+              fontSize="230"
               letterSpacing="-0.02em"
               fill="currentColor"
             >
               DOCKET
             </text>
           </svg>
-          <div className="mt-4 flex w-full flex-col sm:flex-row items-center justify-between text-sm font-semibold text-muted-foreground border-t border-border/50 pt-6">
-            <p>© 2026 Docket. All rights reserved.</p>
-          </div>
         </div>
       </footer>
-    </main>
+    </div>
   );
 }
 
