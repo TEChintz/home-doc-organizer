@@ -1,8 +1,8 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import type { FamilyMember, VaultDocument } from "@/components/dashboard/dashboard-types";
 import { memberNameMap, toFamilyMember, toVaultDocument } from "./adapters";
-import { useAlerts, useDocuments, useFamily } from "./hooks";
+import { useAlerts, useDocuments, useFamily, useProcessingDocuments } from "./hooks";
 import { ApiError } from "./client";
 
 /**
@@ -20,6 +20,8 @@ export interface DashboardData {
   selfMemberId: string | null;
   pendingCount: number;
   isLoading: boolean;
+  /** Documents still being read by the server. */
+  processingCount: number;
   /** True when signed in but no family exists yet. */
   needsFamily: boolean;
   error: Error | null;
@@ -31,6 +33,7 @@ export function useDashboardData(): DashboardData {
   const family = useFamily();
   const confirmed = useDocuments({ status: "confirmed", limit: 200 });
   const pending = useDocuments({ status: "needs_confirmation", limit: 200 });
+  const processing = useProcessingDocuments();
   const alerts = useAlerts("open");
 
   const apiMembers = useMemo(() => family.data?.members ?? [], [family.data]);
@@ -44,6 +47,21 @@ export function useDashboardData(): DashboardData {
   );
 
   const memberNames = useMemo(() => memberNameMap(apiMembers), [apiMembers]);
+
+  // Whenever an in-flight document finishes being read, pull everything again:
+  // it has just moved into the confirmation queue and may have changed the
+  // alert picture. Keyed on the count *falling* rather than reaching zero, so
+  // that with several uploads in flight the first to finish shows up straight
+  // away instead of waiting for the slowest one.
+  const processingCount = processing.data?.length ?? 0;
+  const wasProcessing = useRef(processingCount);
+  useEffect(() => {
+    if (processingCount < wasProcessing.current) {
+      void qc.invalidateQueries({ queryKey: ["documents"] });
+      void qc.invalidateQueries({ queryKey: ["alerts"] });
+    }
+    wasProcessing.current = processingCount;
+  }, [processingCount, qc]);
 
   const documents = useMemo(
     () =>
@@ -68,7 +86,10 @@ export function useDashboardData(): DashboardData {
     memberNames,
     familyName: family.data?.name ?? "Your family",
     selfMemberId,
-    pendingCount: pending.data?.length ?? 0,
+    // Counts documents still being read as well, so the badge responds the
+    // moment an upload lands rather than after extraction completes.
+    pendingCount: (pending.data?.length ?? 0) + processingCount,
+    processingCount,
     isLoading: family.isLoading || confirmed.isLoading,
     needsFamily,
     error: needsFamily ? null : ((familyError as Error | null) ?? null),

@@ -229,7 +229,13 @@ function DashboardPage({ data }: { data: DashboardData }) {
   // The server is the source of truth now: every mutation refetches rather than
   // patching local arrays, so alert counts and member totals stay consistent.
   const handleAddMember = () => refresh();
-  const handleUploadSuccess = () => refresh();
+  // A fresh upload is neither confirmed nor checked yet, so it appears in
+  // neither Documents nor the dashboard. Send the user to the queue where it
+  // actually is, rather than back to a screen that looks unchanged.
+  const handleUploadSuccess = () => {
+    refresh();
+    setActiveTab("review");
+  };
   const handleConnectDigiLockerSuccess = () => refresh();
 
   const handleDeleteDoc = (id: string) => {

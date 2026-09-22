@@ -4,7 +4,12 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useConfirmDocument, useDocuments, usePatchDocument } from "@/lib/api/hooks";
+import {
+  useConfirmDocument,
+  useDocuments,
+  usePatchDocument,
+  useProcessingDocuments,
+} from "@/lib/api/hooks";
 import { EDITABLE_FIELDS, extractedOf, type ApiDocument } from "@/lib/api/types";
 
 /**
@@ -16,12 +21,15 @@ import { EDITABLE_FIELDS, extractedOf, type ApiDocument } from "@/lib/api/types"
 export function ConfirmQueueView() {
   const { data: pending = [], isLoading } = useDocuments({ status: "needs_confirmation" });
   const { data: failed = [] } = useDocuments({ status: "failed" });
+  // Uploads land here first: reading takes a few seconds, and without this row
+  // the document would be invisible until extraction finished.
+  const { data: processing = [] } = useProcessingDocuments();
 
   if (isLoading) {
     return <Centered icon={<Loader2 className="h-5 w-5 animate-spin" />} text="Loading…" />;
   }
 
-  if (pending.length === 0 && failed.length === 0) {
+  if (pending.length === 0 && failed.length === 0 && processing.length === 0) {
     return (
       <Centered
         icon={<Check className="h-6 w-6 text-emerald-600" />}
@@ -39,6 +47,21 @@ export function ConfirmQueueView() {
           start once a document is confirmed.
         </p>
       </header>
+
+      {processing.map((doc) => (
+        <div
+          key={doc.id}
+          className="flex items-center gap-3 rounded-lg border border-border bg-muted/40 p-4"
+        >
+          <Loader2 className="h-4 w-4 shrink-0 animate-spin text-muted-foreground" />
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium">{doc.title}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Reading this document — usually about ten seconds.
+            </p>
+          </div>
+        </div>
+      ))}
 
       {pending.map((doc) => (
         <PendingCard key={doc.id} doc={doc} />
